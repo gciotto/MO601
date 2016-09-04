@@ -3,7 +3,7 @@
 # This script runs all SPEC CPU2006 benchmarks with PIN tool in order
 # to count how many instructions are executed.
 # Each benchmark is run with the following command
-# 'runspec --config=project1.cfg --iterations=1 --size=test --noreportable benchmark',
+# 'runspec --config=project1.cfg --iterations=1 --size=base --tune=base --noreportable benchmark',
 # where project1.cfg configures the tune parameter as 'base' and output_root as the directory
 # of this project.
 #
@@ -13,6 +13,7 @@
 SPEC_DIR=/home/gciotto/SPEC2006
 export PIN_DIR=/home/gciotto/pin-3.0-76991-gcc-linux
 PROJECT_DIR=${PWD}
+PIN_TOOL=inscount_tls
 
 echo $PROJECT_DIR
 
@@ -20,9 +21,9 @@ function runPintoolForBenchmark {
 		
 	mkdir ${PROJECT_DIR}/${1}	
 	
-	runspec --config=project1c --size=ref --iterations=1 --noreportable ${1}
+	runspec --config=project1c --size=ref --iterations=1 --tune=base --noreportable ${1}
 	
-	mv ${PROJECT_DIR}/inscount1.tmp.log ${PROJECT_DIR}/${1}/inscount1.log
+	mv ${PROJECT_DIR}/${PIN_TOOL}.tmp.log ${PROJECT_DIR}/${1}/${PIN_TOOL}_.log_ref
 	
 }
 
@@ -30,11 +31,9 @@ function runPintoolForBenchmark {
 cd ${SPEC_DIR}
 source shrc
 
-# Build inscount1 pintool, according to the pin manual page. 'inscount1' presents better performance
-# than 'inscount0' because it considers inserting the analysis callback function after each trace instead of
-# every intruction.
-echo "Compiling 'inscount1.cpp'"
-( cd ${PIN_DIR}/source/tools/ManualExamples && make dir obj-intel64/inscount1.so )
+# Build inscount_tls pintool, according to the pin manual page. 'inscount_tls' presents the best performance.
+echo "Compiling 'inscount_tls.cpp'"
+( cd ${PIN_DIR}/source/tools/ManualExamples && make dir obj-intel64/${PIN_TOOL}.so )
 
 # Iterates only directories, which are the benchmarks
 for d in ${SPEC_DIR}/benchspec/CPU2006/*/ ; do
