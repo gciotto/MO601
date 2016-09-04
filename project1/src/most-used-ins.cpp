@@ -1,6 +1,6 @@
 /*
- * A new PINTOOL which calculates the routine with the biggest number of instructions
- * for every thread composing the a program.
+ * A new PINTOOL which calculates how many times the instructions of each routine of each thread are 
+ * executed.
  *
  * Author: Gustavo CIOTTO PINTON
  * Computer Architecture II MO601B
@@ -11,15 +11,14 @@
 #include <string.h>
 #include "pin.H"
 
-#define MAX_ROUTINES_PER_THREAD 50
-
+#define MAX_ROUTINES_PER_THREAD 10
 #define STATIC_INS 1
 
 /* Output file handler */
 ofstream OutFile;
 
-/* thread counter */
-INT32 number_threads = 0;
+/* Thread counter */
+UINT32 number_threads = 0;
 
 /* KNOB handles input arguments. According to the reference page,
  * KNOB_MODE_WRITEONCE indicates that, in case of multiple appearances of the argument
@@ -32,27 +31,33 @@ PIN_LOCK lock;
 /* TLS storage for threads  */
 static TLS_KEY tls_key;
 
-class Routine_info {
 
+/* A node containing all information about a thread */
+class Thread_node {
 
 public:
-	Routine_info() : _ins_count (0), _next (NULL) {}
-	UINT64 _ins_count;
+	Thread_node(): _id(0), _ins_count (0), _next (NULL) {}
+
+	UINT32 _id, _ins_count;
+	Thread_node* _next;
+};
+
+
+/* Each routine node contains the head and the tail of a linked list which
+   contains information about each thread where it is called */
+class Routine_node {
+
+public:
+	Routine_node() :  _id (0),  _n_threads (0), _threads_head (NULL), _threads_tail (NULL), _next (NULL) {}
+
 	string _name;
-	Routine_info* _next;
+	UINT32 _id, _n_threads;
+	Thread_node *_threads_head, *_threads_tail;
+	Routine_node* _next;
 };
 
 
-class Thread_info {
-
-public:
-	Thread_info(): _routine_head(NULL), _routine_count (0) {}
-
-	Routine_info* _routine_head;
-	UINT32 _routine_count;
-};
-
-
+Routine_node *_routine_head = NULL, *_routine_tail = NULL;
 
 /* Function of the 'type' THREAD_START_CALLBACK(THREADID threadIndex, CONTEXT *ctxt, INT32 flags, VOID *v),
  * according to the API reference */
@@ -70,137 +75,129 @@ VOID initThreadData (THREADID threadid, CONTEXT *ctxt, INT32 flags, VOID *v) {
 
     PIN_ReleaseLock(&lock);
 
-    OutFile << "Ok" << endl;
-
-    OutFile << "initThreadData: Creating data structure for thread #" << (number_threads - 1) << "...";
-
-    Thread_info* tdata = new Thread_info;
-
-    OutFile << "Ok" << endl ;
-
-    PIN_SetThreadData(tls_key, tdata, threadid);
 }
 
 /* This function is called before every instruction is executed */
-VOID incrementCounter(THREADID _thread_id, string _name) {
-
-	Thread_info* _t_info = static_cast<Thread_info*> (PIN_GetThreadData(tls_key, _thread_id));
-
-	for (Routine_info* t =  _t_info->_routine_head; t; t = t->_next)
-		if (!t->_name.compare(_name)) {
-			t->_ins_count++;
-			break;
-		}
-
-}
-
-VOID saveRoutineObjectStatic(THREADID _thread_id, string _name, UINT32 c) {
+VOID incrementCounter(THREADID _thread_id, Routine_node* _rtn) {
 
 
-    Thread_info* _t_info = static_cast<Thread_info*> (PIN_GetThreadData(tls_key, _thread_id));
+	if (!_rtn->_threads_head) {
 
+		_rtn->_threads_head = new Thread_node;
+		_rtn->_threads_tail = _rtn->_threads_head;
 
-	if (_t_info) {
+		_rtn->_threads_head->_id = _thread_id;
+		_rtn->_threads_head->_ins_count++;
 
-		UINT8 hasFound = 0;
-		Routine_info* t;
-		for (t =  _t_info->_routine_head; t; t = t->_next)
-			if (!t->_name.compare(_name)) {
-				hasFound = 1;
-				break;
-			}
-
-		if (!hasFound) {
-
-			Routine_info* _new_routine = new Routine_info;
-
-			_new_routine->_name = _name;
-
-			/* Adds new routine to the beginning of the linked list */
-			_new_routine->_next = _t_info->_routine_head;
-			_t_info->_routine_head = _new_routine;
-			_new_routine->_ins_count = c;
-		}
-		else t->_ins_count += c;
+		_rtn->_n_threads++;
+		return;
 	}
 
-}
-
-VOID saveRoutineObject(THREADID _thread_id, string _name) {
-
-
-    Thread_info* _t_info = static_cast<Thread_info*> (PIN_GetThreadData(tls_key, _thread_id));
-
-	if (_t_info) {
-
-		UINT8 hasFound = 0;
-		Routine_info* t;
-		for (t =  _t_info->_routine_head; t; t = t->_next)
-			if (!t->_name.compare(_name)) {
-				hasFound = 1;
-				break;
-			}
-
-		if (!hasFound) {
-
-			Routine_info* _new_routine = new Routine_info;
-
-			_new_routine->_name = _name;
-
-
-			/* Adds new routine to the beginning of the linked list */
-			_new_routine->_next = _t_info->_routine_head;
-			_t_info->_routine_head = _new_routine;
-		}
+	for (Thread_node* _t = _rtn->_threads_head; _t; _t = _t->_next) {
+		if (_t->_id == _thread_id) {
+			_t->_ins_count++;
+			return;
+		}		
 	}
 
+	Thread_node* _n = new Thread_node;
+	_n->_id = _thread_id;
+	_n->_ins_count++;
+	
+	_rtn->_threads_tail->_next = _n;
+	_rtn->_threads_tail = _n;	
 }
 
-/* Function of the 'type' RTN_INSTRUMENT_CALLBACK(RTN rtn, VOID *v). */
+/* Function of the 'type' RTN_INSTRUMENT_CALLBACK(RTN rtn, VOID *v). This is the instrumentation function and
+   it is called just once for each routine to determine which code should be inserted in the given binary. All
+   'heavy' processing should be moved from the analysis routine to this function in order to prevent significant 
+ 	performance loss. 
+
+   In our case, we look for the routine 'rtn' in the list of routines, which can take a large amount of time,
+   and leave the adding operation to the analysis routine.
+*/
 VOID initRoutineCallback(RTN rtn, VOID *v) {
 
     RTN_Open(rtn);
 
-    string* _rtn_name = new string (RTN_Name(rtn));
+	if (RTN_Valid(rtn)) {
+
+	    /* Verify if rtn is already in list */
+
+		/* Pin assigns a unique id to each routine - refer to the manual -
+		   we use it to identify the routines. */
+		UINT32 _rtn_id = RTN_Id(rtn);
+		string _rtn_name = RTN_Name(rtn);
+		Routine_node* _n;
+
+		/* if _routine_head is NULL, then we should create it. */
+		if (!_routine_head) {
+
+			/* create a new linked list */
+			_routine_head = new Routine_node;
+			_routine_head->_id = _rtn_id;
+			_routine_head->_name = _rtn_name;
+
+			_routine_tail = _routine_head;
+
+			_n = _routine_head;
 
 
-    // RTN_NumIns 	(  	RTN  	rtn 	 )
 
-    if (STATIC_INS)
-    	RTN_InsertCall(rtn, IPOINT_BEFORE, (AFUNPTR)saveRoutineObjectStatic, IARG_THREAD_ID, IARG_PTR , _rtn_name, IARG_UINT32, RTN_NumIns(rtn),  IARG_END);
+		}
+		else { /* List is not empty, verifies if routine is already in it */
 
-    else {
 
-		RTN_InsertCall(rtn, IPOINT_BEFORE, (AFUNPTR)saveRoutineObject, IARG_THREAD_ID, IARG_PTR , _rtn_name, IARG_END);
+			BOOL inList = 0;
+			for (Routine_node* _t = _routine_head; _t; _t = _t->_next) 
+				if (_t->_id == _rtn_id) {
+					_n = _t;
+					inList = 1;
+					break;
+				}
 
-		//For each instruction of the routine
+			if (!inList) {
+				
+				/* If 'rtn' is not found in list, create a new node in the end 
+				   end of the linked list. */
+				Routine_node* _new = new Routine_node;
+				_new->_id = _rtn_id;
+				_new->_name = _rtn_name;
+
+				_routine_tail->_next = _new;
+				_routine_tail = _new;
+				_n = _new;
+				
+			}
+
+		}
+
+		/* For each valid instruction of the routine, we increment its counter */
 		for (INS ins = RTN_InsHead(rtn); INS_Valid(ins); ins = INS_Next(ins))
-			INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)incrementCounter, IARG_THREAD_ID, IARG_PTR, _rtn_name, IARG_END);
-    }
+			INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)incrementCounter, IARG_THREAD_ID, IARG_PTR, _n, IARG_END);
+
+	}
 
     RTN_Close(rtn);
-
-
 
 }
 
 /* Callback function called when application is exiting */
 VOID endTool(INT32 code, VOID *v)
 {
-    // Write to a file since cout and cerr maybe closed by the application
+    /* Write to a file since cout and cerr maybe closed by the application */
     OutFile << "Total number of threads = " << number_threads << endl;
 
-    for (INT32 i = 0 ; i < number_threads; i++) {
-
-    	Thread_info* _t_info = static_cast<Thread_info*> (PIN_GetThreadData(tls_key, i));
+    for (UINT32 i = 0 ; i < number_threads; i++) {
 
     	OutFile << "Thread #" << decstr(i) << endl;
 
-    	for (Routine_info* t = _t_info->_routine_head; t; t = t->_next)
-    			OutFile << "|----- " << t->_name << " with " << t->_ins_count << " static instructions. " << endl;
-    		else
-    		if (STATIC_INS)
-    			OutFile << "|----- " << t->_name << " with " << t->_ins_count << " executed instructions. " << endl;
+    	for (Routine_node* t = _routine_head; t; t = t->_next)
+			for (Thread_node *s = t->_threads_head; s; s = s->_next)
+				if (s->_id == i) 
+			    	OutFile << "|----" << t->_name << " = " << decstr(s->_ins_count) << endl;
+					
+
     	OutFile.flush();
 
     }
@@ -217,14 +214,14 @@ INT32 Usage()
 }
 
 /* Main function. It opens a file handler and adds an instrument function
- * after all instruction in program  */
+ * after all instructions of the given program  */
 int main(int argc, char *argv[])
 {
     if (PIN_Init(argc, argv)) return Usage();
 
     PIN_InitSymbols();
 
-    OutFile.open(KnobOutputFile.Value().c_str(), ofstream::out | ofstream::app);
+    OutFile.open(KnobOutputFile.Value().c_str());
 
     OutFile << "Creating lock...";
 
@@ -254,7 +251,6 @@ int main(int argc, char *argv[])
 
     PIN_AddFiniFunction(endTool, 0);
 
-    // Never returns
     PIN_StartProgram();
 
     return 0;
