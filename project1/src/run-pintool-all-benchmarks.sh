@@ -37,7 +37,6 @@ echo "Compiling 'inscount_tls.cpp'"
 
 # Iterates only directories, which are the benchmarks
 for d in ${SPEC_DIR}/benchspec/CPU2006/*/ ; do
-	_bench_name=${d##*.}
-	runPintoolForBenchmark "${_bench_name::-1}"
+	runPintoolForBenchmark "${d::-1}"
 done
 
