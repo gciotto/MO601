@@ -13,7 +13,7 @@
 SPEC_DIR=/home/gciotto/SPEC2006
 export PIN_DIR=/home/gciotto/pin-3.0-76991-gcc-linux
 PROJECT_DIR=${PWD}
-PIN_TOOL=inscount_tls
+PIN_TOOL=inscount2
 
 echo $PROJECT_DIR
 
@@ -23,7 +23,7 @@ function runPintoolForBenchmark {
 	
 	runspec --config=project1c --size=ref --iterations=1 --tune=base --noreportable ${1}
 	
-	mv ${PROJECT_DIR}/${PIN_TOOL}.tmp.log ${PROJECT_DIR}/${1}/${PIN_TOOL}_.log_ref
+	mv ${PROJECT_DIR}/${PIN_TOOL}.tmp.log ${PROJECT_DIR}/${1}/${PIN_TOOL}_.log_ref_2
 	
 }
 
@@ -31,12 +31,13 @@ function runPintoolForBenchmark {
 cd ${SPEC_DIR}
 source shrc
 
-# Build inscount_tls pintool, according to the pin manual page. 'inscount_tls' presents the best performance.
-echo "Compiling 'inscount_tls.cpp'"
+# Build inscount_tls pintool, according to the pin manual page. 'inscount2' presents the best performance.
+echo "Compiling 'inscount2.cpp'"
 ( cd ${PIN_DIR}/source/tools/ManualExamples && make dir obj-intel64/${PIN_TOOL}.so )
 
 # Iterates only directories, which are the benchmarks
-for d in ${SPEC_DIR}/benchspec/CPU2006/*/ ; do	
+for d in ${SPEC_DIR}/benchspec/CPU2006/*/ ; do
+	
 	benchmarks=${d##*2006/}
 	runPintoolForBenchmark "${benchmarks::-1}"
 done
