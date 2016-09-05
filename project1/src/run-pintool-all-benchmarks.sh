@@ -36,7 +36,9 @@ echo "Compiling 'inscount_tls.cpp'"
 ( cd ${PIN_DIR}/source/tools/ManualExamples && make dir obj-intel64/${PIN_TOOL}.so )
 
 # Iterates only directories, which are the benchmarks
-for d in ${SPEC_DIR}/benchspec/CPU2006/*/ ; do
-	runPintoolForBenchmark "${d::-1}"
+for d in ${SPEC_DIR}/benchspec/CPU2006/*/ ; do	
+	benchmarks=${d##*2006/}
+	runPintoolForBenchmark "${benchmarks::-1}"
 done
+
 
