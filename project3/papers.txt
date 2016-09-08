@@ -2,3 +2,6 @@
 Improving DRAM Performance by Parallelizing Refreshes with Accesses 
 [ISCA]
 Enabling preemptive multiprogramming on GPUs
+Dynamic Thread Block Launch: A Lightweight Execution Mechanism to Support Irregular Applications on GPUs
+[MICRO]
+Cross-Architecture Performance Prediction (XAPP) Using CPU Code to Predict GPU Performance
