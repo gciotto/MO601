@@ -1,10 +1,20 @@
+/*
+ * A new PINTOOL which simulates two branch predictor models. It provides 1-bit and 2-bit models.
+ *
+ * Author: Gustavo CIOTTO PINTON
+ * Computer Architecture II MO601B
+ */
+
 #include <iostream>
 #include <fstream>
 #include <string.h>
 #include "pin.H"
 
-#define HASH_FUNCTION 2048
+/* Hash function is the least significant bits of PC. HASH_FUNCTION defines its number and the
+   the array sizes. For example, if it is 4096, 10 bits are used. */
+#define HASH_FUNCTION 4096
 
+/* Abstract class for a branch predictor model. */
 class GenericBP {
 
 public:
@@ -15,12 +25,14 @@ public:
 	ADDRINT target[HASH_FUNCTION];
    	BOOL getPrediction (ADDRINT pc);
 	ADDRINT getPredictedTarget (ADDRINT pc);
-	virtual VOID update (ADDRINT pc, BOOL taken, ADDRINT target);
+	/* All subclasses must define update method. */
+	virtual VOID update (ADDRINT pc, BOOL taken, ADDRINT target) 	= 0;
 
 };
 
 GenericBP::GenericBP (){
-
+	
+	/* Initializes all arrays. */
 	for (UINT32 i = 0; i < HASH_FUNCTION; i++) {
 		target[i] = 0;
 		prediction[i]	 = false;
@@ -37,15 +49,16 @@ BOOL GenericBP::getPrediction (ADDRINT pc) {
 }
 
 
+/* 1-bit branch predictor model. */
 class BP1bit : public GenericBP {
 
 public:
 	
-	BP1bit () : GenericBP () {};
 	VOID update (ADDRINT pc, BOOL taken, ADDRINT target);
 
 };
 
+/* the branch predictor is updated only based on last ocurrence */
 VOID BP1bit::update (ADDRINT pc, BOOL taken, ADDRINT t) {
 	if (taken) {
 		target [pc & (HASH_FUNCTION - 1) ] = t;
@@ -54,6 +67,7 @@ VOID BP1bit::update (ADDRINT pc, BOOL taken, ADDRINT t) {
 	prediction [pc & (HASH_FUNCTION - 1) ] = taken;
 }
 
+/* A possible state of the 2-bit branch predictor */
 enum State {
 	STRONG_TAKEN,
 	WEAK_TAKEN,
@@ -61,7 +75,7 @@ enum State {
 	STRONG_NOT_TAKEN
 };
 
-
+/* 2-bit branch predictor model */
 class BP2bit : public GenericBP {
 
 public:
@@ -72,6 +86,7 @@ public:
 
 };
 
+/* Updates the state according to we discussed in class. */
 VOID BP2bit::update (ADDRINT pc, BOOL taken, ADDRINT t) {
 
 	enum State aState = bpState[pc & (HASH_FUNCTION - 1)];
@@ -130,14 +145,16 @@ VOID BP2bit::update (ADDRINT pc, BOOL taken, ADDRINT t) {
 
 }
 
-BP2bit::BP2bit() : GenericBP () {
+BP2bit::BP2bit() {
 
 	for (UINT32 i = 0; i < HASH_FUNCTION; i++)
 		bpState[i] = WEAK_NOT_TAKEN;	
 }
 
-BP1bit* BP = new BP1bit();
-UINT32 missdirectionpredicted = 0, misstargetpredicted = 0, wellpredicted = 0;
+/* Predictor. Change according to preference. */
+BP2bit* BP = new BP2bit();
+/* Performance counters */
+UINT32 missdirectionpredicted = 0, misstargetpredicted = 0, misspredicted = 0, wellpredicted = 0;
 
 KNOB<string> KnobOutputFile(KNOB_MODE_WRITEONCE, "pintool",
     "o", "most-used.out", "specify output file name");
@@ -146,6 +163,7 @@ KNOB<string> KnobOutputFile(KNOB_MODE_WRITEONCE, "pintool",
 ofstream OutFile;
 
 
+/* Analysis routine. Called before all branch or call instruction. */
 VOID ProcessBranch(ADDRINT pc, ADDRINT target, bool taken) { 
 	BOOL pred = BP->getPrediction(pc); 
 	ADDRINT predTarget = BP->getPredictedTarget(pc);
@@ -163,11 +181,13 @@ VOID ProcessBranch(ADDRINT pc, ADDRINT target, bool taken) {
 
 	if (ok) 
 		wellpredicted++;
+	else misspredicted++;
 
 	BP->update(pc, taken, target); 
 } 
 
 
+/* Instrumentation routine. */
 VOID Instruction(INS ins, VOID *v)  
 { 
   if( INS_IsDirectBranchOrCall(ins) ) 
@@ -184,6 +204,7 @@ VOID endTool(INT32 code, VOID *v)
     /* Write to a file since cout and cerr maybe closed by the application */
     OutFile << "Miss predicted direction = " << missdirectionpredicted << endl;
     OutFile << "Miss predicted target = " << misstargetpredicted << endl;
+    OutFile << "Miss predicted = " << misspredicted << endl;
     OutFile << "Well predicted = " << wellpredicted << endl;
 
     OutFile.close();
