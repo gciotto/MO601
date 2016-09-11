@@ -19,9 +19,10 @@ Para esta tarefa, utilizamos os seguintes arquivos:
   - `PIN_TOOL`: nome da ferramenta.
 
 ## Implementação de uma `pintool` 
-Os seguintes arquivos foram implementados para esta etapa:
-- `most-used-ins.cpp`: arquivo *cpp* da nova `pintool`. 
-- `makefile`: arquivo necessário para a compilação da `pintool`. Para a sua utilização, é necessário executar o comando `export PIN_ROOT=/path/to/pin` e, em seguida, `make obj-intel64/most-used-ins.so`.
+Duas novas `pintools` foram criadas. Os seguintes arquivos foram implementados para esta etapa:
+- `most-used-ins.cpp`: arquivo *cpp* da `pintool` que conta instruções por *thread* e por rotina. 
+- `bp-pintool.cpp`: arquivo *cpp* da `pintool` que simula *branch predictors* de 1 e 2 *bits*.
+- `makefile`: arquivo necessário para a compilação das `pintools`. Para a sua utilização, é necessário executar o comando `export PIN_ROOT=/path/to/pin` e, em seguida, `make obj-intel64/most-used-ins.so`.
 - `run-spec-command-mytool.sh`: equivalente ao *script* `run-spec-command.sh` da seção anterior.
 - `project1d.cfg`: arquivo de configuração do SPEC. Necessário modificar os comandos `output_root` e `submit` para as localidades corretas do projeto e do *script* `run-spec-command-mytool.sh`, respectivamente.
 - `run-custom-pintool-5-benchmarks.sh`: equivalente ao *script* `run-pintool-all-benchmarks.sh` da seção anterior.
