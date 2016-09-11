@@ -12,6 +12,7 @@
 
 SPEC_DIR=/home/gciotto/SPEC2006
 PIN_DIR=/home/gciotto/pin-3.0-76991-gcc-linux
+TOOL_NAME=bp-pintool
 export PIN_ROOT=${PIN_DIR}
 PROJECT_DIR=${PWD}
 
@@ -23,7 +24,7 @@ function runPintoolForBenchmark {
 
 	runspec --config=project1d --size=ref --tune=base --iterations=1 --noreportable ${1}
 
-	mv ${PROJECT_DIR}/most-used-ins.tmp.log ${PROJECT_DIR}/${1}/most-used-ins.${1}.log_ref
+	mv ${PROJECT_DIR}/${TOOL_NAME}.tmp.log ${PROJECT_DIR}/${1}/${TOOL_NAME}.${1}.log_ref_11-09
 
 }
 
@@ -31,14 +32,16 @@ function runPintoolForBenchmark {
 cd ${SPEC_DIR}
 source shrc
 
-# Build my pintool, according to the pin manual page.
+# Build inscount1 pintool, according to the pin manual page. 'inscount1' presents better performance
+# than 'inscount0' because it considers inserting the analysis callback function after each trace instead of
+# every intruction.
 echo "Compiling 'most-used-ins.cpp'"
-(cd ${PROJECT_DIR} && make dir obj-intel64/most-used-ins.so)
+(cd ${PROJECT_DIR} && make dir obj-intel64/${TOOL_NAME}.so)
 
 
 benchmarks=( perlbench bzip2 gcc mcf gobmk)
 
-# Iterates the array containing the benchmarks selected for analysis
+# Iterates only directories, which are the benchmarks
 for d in ${benchmarks[@]}; do
 	echo $d
 	runPintoolForBenchmark "${d}"
