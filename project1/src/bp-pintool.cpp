@@ -152,9 +152,9 @@ BP2bit::BP2bit() {
 }
 
 /* Predictor. Change according to preference. */
-BP2bit* BP = new BP2bit();
+BP1bit* BP = new BP1bit();
 /* Performance counters */
-UINT32 missdirectionpredicted = 0, misstargetpredicted = 0, misspredicted = 0, wellpredicted = 0;
+UINT64 missdirectionpredicted = 0, misstargetpredicted = 0, misspredicted = 0, wellpredicted = 0;
 
 KNOB<string> KnobOutputFile(KNOB_MODE_WRITEONCE, "pintool",
     "o", "most-used.out", "specify output file name");
@@ -202,10 +202,10 @@ VOID Instruction(INS ins, VOID *v)
 VOID endTool(INT32 code, VOID *v)
 {
     /* Write to a file since cout and cerr maybe closed by the application */
-    OutFile << "Miss predicted direction = " << missdirectionpredicted << endl;
-    OutFile << "Miss predicted target = " << misstargetpredicted << endl;
-    OutFile << "Miss predicted = " << misspredicted << endl;
-    OutFile << "Well predicted = " << wellpredicted << endl;
+    OutFile << "Miss predicted direction = " << decstr(missdirectionpredicted) << endl;
+    OutFile << "Miss predicted target = " << decstr(misstargetpredicted) << endl;
+    OutFile << "Miss predicted = " << decstr(misspredicted) << endl;
+    OutFile << "Well predicted = " << decstr(wellpredicted) << endl;
 
     OutFile.close();
 }
