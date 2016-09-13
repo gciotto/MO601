@@ -38,7 +38,8 @@ class Thread_node {
 public:
 	Thread_node(): _id(0), _ins_count (0), _next (NULL) {}
 
-	UINT32 _id, _ins_count;
+	UINT32 _id;
+	UINT64 _ins_count;
 	Thread_node* _next;
 };
 
@@ -182,6 +183,39 @@ VOID initRoutineCallback(RTN rtn, VOID *v) {
 
 }
 
+Routine_node* getAndRemoveBiggestRoutine(UINT32 threadID, UINT64* inscount){
+
+	*inscount = 0;
+	Routine_node *biggest = NULL;
+	Thread_node* previousBiggestThread = NULL, *biggestThread = NULL;
+
+	for (Routine_node* t = _routine_head; t; t = t->_next) {
+		Thread_node *o = NULL;
+		for (Thread_node *s = t->_threads_head; s; s = s->_next)  {
+			if (s->_id == threadID && s->_ins_count > *inscount)  {
+
+				*inscount = s->_ins_count;
+				biggest = t;
+				previousBiggestThread = o;
+				biggestThread = s;
+			}
+			o = s;
+		}
+	}
+
+	if (previousBiggestThread) {
+		if (biggestThread)
+			previousBiggestThread->_next = biggestThread->_next;
+	}
+	else 
+		if (biggest)
+			biggest->_threads_head = biggestThread->_next;
+		
+
+	return biggest;
+
+}
+
 /* Callback function called when application is exiting */
 VOID endTool(INT32 code, VOID *v)
 {
@@ -189,14 +223,20 @@ VOID endTool(INT32 code, VOID *v)
     OutFile << "Total number of threads = " << number_threads << endl;
 
     for (UINT32 i = 0 ; i < number_threads; i++) {
+	
+		UINT64 value;
 
     	OutFile << "Thread #" << decstr(i) << endl;
+		
+		Routine_node* biggest =	getAndRemoveBiggestRoutine(i, &value);
 
-    	for (Routine_node* t = _routine_head; t; t = t->_next)
-			for (Thread_node *s = t->_threads_head; s; s = s->_next)
-				if (s->_id == i) 
-			    	OutFile << "|----" << t->_name << " = " << decstr(s->_ins_count) << endl;
-					
+		while (biggest) {
+			OutFile << "|----" << biggest->_name << " = " << decstr(value) << endl;
+
+			biggest = getAndRemoveBiggestRoutine(i, &value);
+
+		}
+			
 
     	OutFile.flush();
 
@@ -221,7 +261,7 @@ int main(int argc, char *argv[])
 
     PIN_InitSymbols();
 
-    OutFile.open(KnobOutputFile.Value().c_str());
+    OutFile.open(KnobOutputFile.Value().c_str(), ofstream::out | ofstream::app);
 
     OutFile << "Creating lock...";
 
