@@ -1,5 +1,6 @@
 [HPCA]
 Improving DRAM Performance by Parallelizing Refreshes with Accesses 
+Accelerating Decoupled Look-ahead via Weak Dependence Removal: A Metaheuristic Approach 
 [ISCA]
 Enabling preemptive multiprogramming on GPUs
 Dynamic Thread Block Launch: A Lightweight Execution Mechanism to Support Irregular Applications on GPUs
