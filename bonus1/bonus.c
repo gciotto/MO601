@@ -19,7 +19,7 @@ void b () {
 
 	if (counter){
 		counter--;
-		a();
+		c();
 	}
 }
 
@@ -29,6 +29,10 @@ void c () {
 		counter--;
 		a();
 	}
+}
+
+void d() {
+	return;
 }
 
 struct timespec diff(struct timespec start, struct timespec end)
@@ -52,7 +56,11 @@ int main(){
 	struct timespec begin, end, result;
 
 	
-	for (unsigned int i = 2; i <= 4096; i = 2*i) {
+	for (unsigned int i = 2; i <= 5096; i = i*2) {
+
+		/* Clear RAS */
+		for (unsigned int p = 0; p < 1024; p++ ) 
+			d();
 
 		counter = i;
 		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &begin); 
@@ -63,7 +71,8 @@ int main(){
 
 		result = diff (begin, end);
 
-		printf ("(%u) %ld\n", i, result.tv_nsec);
+		printf ("%u,%ld\n", i, result.tv_nsec);
+
 	}
 
 	return 0;
