@@ -1,18 +1,17 @@
 # Bônus 1
-A fim de calcular o número de entradas disponíveis no RAS do processador Intel i3, o arquivo `bonus.c` foi implementado. Considerando que tal pilha apresenta tamanhos iguais a potências de 2, este programa faz com que 3 funções se chamem ciclicamente por uma quantidade `counter` de vezes. Como nenhuma potência de 2 é divisível por 3, haverá um valor de `counter` que produzirá um *overflow* em RAS. A tabela abaixo representa os valores de `counter` e o intervalo de tempo que o ciclo levou para ser completado.
+A fim de calcular o número de entradas disponíveis no RAS do processador Intel i3, o arquivo `bonus.c` foi implementado. O programa é constituído por 2 laços: o mais externo é responsável por armazenar os diversos resultados para um posterior cálculo de média e o mais interno, por medir o tempo de execução de recursões com números variáveis de chamadas. A ideia desta lógica consiste no fato de que quando a capacidade do RAS for estourada, o programa levará mais tempo para ser completado. 
 
-`Counter` | Tempo (ns)
-----------|-----------
-8 | 676
-16 | 694
-32 | 1096
-64 | 1627
-128 | 2986
-256 | 5401
-512 | 14586
-1024 | 31869
-2048 | 59121
-4096 | 107938
+## Parâmetros
 
-A figura `plot.png` mostra os dados acima em uma representação visual. As execuções de 8, 16, 32 e 64 apresentam intervalos com variação muito pequena, sendo que a diferença da execução de 128 em relação é 64 ultrapassa 1us. Sendo assim, conclui-se que o RAS possui **64 entradas**.
+O laço mais interno produz valores do número de chamadas variando de 2 até 512 com intervalo de 2 entre cada um, enquanto que o mais externo executa este primeiro 64 vezes. Estes parâmetros são configurados através das constantes `MAX_RECURSION` e `NUMBER_ITERATIONS`, respectivamente.
+
+## Execução
+
+Para a contagem do tempo, utiliza-se um relógio disponível do Linux acessado através da função `clock_gettime()` que recebe o respectivo clock. Por motivos de precisão, escolhemos o `CLOCK_REALTIME`, que segundo a documentação, necessita de privilégios especiais para ser setado. Portanto, este programa necessita ser executado como `root`.
+
+O script `run.sh` executa o aplicativo.
+
+## Resultado
+
+Para o processador Intel i3, o valor calculado foi de 16 entradas. Para os valores de recursão entre 2 e 16, a diferença entre cada um deles variou de aproximamente 15 nanossegundos.
 

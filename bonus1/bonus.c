@@ -1,37 +1,97 @@
 #include <stdio.h>
 #include <time.h>
 
+#define NUMBER_ITERATIONS 	64
+#define MAX_RECURSION		128
+
 unsigned int counter;
 
-void a();
-void b();
-void c();
+void a(void);
+void b(void);
+void c(void);	
+void d(void);
+void e(void);
+void f(void);
+void g(void);
 
-void a (){
+typedef void (*fs)(void);
+
+fs funcs[7]; /* 7 functions to prevent any kind of call patterns */
+
+void a (void){
 
 	if (counter) {
 		counter--;
+		//(*(funcs[counter % 7]))();
 		b();
 	}
+
+	return;
 }
 
-void b () {
+void b (void) {
 
 	if (counter){
 		counter--;
-		c();
+		//(*(funcs[(counter * 2) % 7]))();
+		c();	
 	}
+
+	return;
 }
 
-void c () {
+void c (void) {
 	
 	if (counter) {
 		counter--;
-		a();
+		//(*(funcs[(counter * 3) % 7]))();
+		d();
 	}
+
+	return;
 }
 
-void d() {
+void d (void) {
+	
+	if (counter) {
+		counter--;
+		//(*(funcs[(counter * 4) % 7]))();
+		e();
+	}
+
+	return;
+}
+
+void e (void) {
+	
+	if (counter) {
+		counter--;
+		//(*(funcs[(counter * 5) % 7]))();
+		f();
+	}
+
+	return;
+}
+
+void f (void) {
+	
+	if (counter) {
+		counter--;
+		//(*(funcs[(counter * 6) % 7]))();
+		g();
+	}
+
+	return;
+}
+
+void g (void) {
+	
+	if (counter) {
+		counter--;
+		//(*(funcs[(counter * 7 - 3) % 7]))();
+		a();
+	}
+
 	return;
 }
 
@@ -51,30 +111,73 @@ struct timespec diff(struct timespec start, struct timespec end)
         return temp;
 }
 
+void nope() {
+	return;
+}
+
 int main(){
 
 	struct timespec begin, end, result;
 
-	
-	for (unsigned int i = 2; i <= 5096; i = i*2) {
+	funcs[0] = a;
+	funcs[1] = b;
+	funcs[2] = c;
+	funcs[3] = d;
+	funcs[4] = e;
+	funcs[5] = f;
+	funcs[6] = g;
 
-		/* Clear RAS */
-		for (unsigned int p = 0; p < 1024; p++ ) 
-			d();
+	/* Array to save delays */
+	unsigned long int diffs[MAX_RECURSION/2 + 1];
+	for (int i = 1; i <= MAX_RECURSION/2; i++) 
+		diffs [i] = 0;
 
-		counter = i;
-		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &begin); 
+	for (int j = 0; j < NUMBER_ITERATIONS; j++)
+		for (unsigned int i = 2; i <= MAX_RECURSION; i = i + 2) {
 
-		a();
+			/* CLOCK_REALTIME may need root privileges */
+			clock_gettime(CLOCK_REALTIME, &begin); 
 
-		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end); 
+			/* Clear RAS - overflows RAS a considerable number of times and  
+			   eliminates the effects caused by 'clock_gettime()' call. */
+			for (unsigned int p = 0; p < 64; p++) 
+				nope();
 
-		result = diff (begin, end);
+			counter = i;
 
-		printf ("%u,%ld\n", i, result.tv_nsec);
+			/* During recursion, we need to make the job as easiest as possible to the branch predictor unit. 
+			   For this reason, we create a cycle call pattern, that is, a calls b, that call c and so on. 
+			   The only unit we need to test is the RAS. */
+			a();
 
+			clock_gettime(CLOCK_REALTIME, &end); 
+
+			result = diff (begin, end);
+
+			diffs[i/2] += result.tv_nsec;
+
+		}
+
+	int ras = 0;
+	long int diff;
+	for (int i = 2; i <= MAX_RECURSION; i = i + 2)  {
+
+			if (i != 2) {
+				diff = (long int) (diffs[i/2] - diffs[(i-2)/2])/NUMBER_ITERATIONS;
+				printf ("%u,%ld, d=%ld\n", i, diffs[i/2]/NUMBER_ITERATIONS, diff);
+
+				/* We consider that an overflow may cause around 20 cycles to recover (class).
+				   Considering a 1.175Ghz CPU (intel Core i3), we have about 20 nanosseconds caused by
+				   an overflow. */
+				if (diff > 20) {
+					ras = i;
+					break;
+				}
+			}
+			else 	printf ("%u,%ld\n", i, diffs[i/2]/NUMBER_ITERATIONS);
 	}
 
+	printf ("O RAS possui em torno de %d entradas.\n", ras);
 	return 0;
 
 }
