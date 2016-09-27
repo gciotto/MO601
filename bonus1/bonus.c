@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <time.h>
 
-#define NUMBER_ITERATIONS 	64
+#define NUMBER_ITERATIONS 	2048
 #define MAX_RECURSION		128
 
 unsigned int counter;
@@ -159,20 +159,22 @@ int main(){
 		}
 
 	int ras = 0;
-	long int diff;
+	long int diff, diff_previous, diff_sum = 0;
 	for (int i = 2; i <= MAX_RECURSION; i = i + 2)  {
 
 			if (i != 2) {
 				diff = (long int) (diffs[i/2] - diffs[(i-2)/2])/NUMBER_ITERATIONS;
 				printf ("%u,%ld, d=%ld\n", i, diffs[i/2]/NUMBER_ITERATIONS, diff);
 
-				/* We consider that an overflow may cause around 20 cycles to recover (class).
-				   Considering a 1.175Ghz CPU (intel Core i3), we have about 20 nanosseconds caused by
-				   an overflow. */
-				if (diff > 20) {
+				/* if the actual iteration takes more than 2 times that average of the previous ones, 
+				   we conclude that there has been an overflow! */
+				if (i > 12 && ((double) diff) > (((double)diff_sum) * 2 * 2.0 / (i - 4))) {
 					ras = i;
 					break;
 				}
+
+				diff_previous = diff;
+				diff_sum += diff;
 			}
 			else 	printf ("%u,%ld\n", i, diffs[i/2]/NUMBER_ITERATIONS);
 	}
