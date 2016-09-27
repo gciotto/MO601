@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <time.h>
 
-#define NUMBER_ITERATIONS 	2048
+#define NUMBER_ITERATIONS 	10000
 #define MAX_RECURSION		128
 
 unsigned int counter;
