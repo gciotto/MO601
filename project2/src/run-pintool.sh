@@ -11,10 +11,11 @@
 # Computer Architecture II MO601B
 
 SPEC_DIR=/home/gciotto/SPEC2006
-PIN_DIR=/home/gciotto/pin-3.0-76991-gcc-linux
+PIN_DIR=/home/gciotto/pinplay-drdebug-pldi2016-3.0-pin-3.0-76991-gcc-linux
 TOOL_NAME=page_simulator_tool
 export PIN_ROOT=${PIN_DIR}
-PROJECT_DIR=${PWD}
+export PROJECT_DIR=${PWD}
+PINBALL_DIR=${PROJECT_DIR}/cpu2006-pinballs-pinplay-1.1
 
 echo $PROJECT_DIR
 
@@ -22,9 +23,9 @@ function runPintoolForBenchmark {
 		
 	mkdir ${PROJECT_DIR}/${1}	
 
-	runspec --config=project2 --size=test --tune=base --iterations=1 --noreportable ${1}
+	benchmark="${1##*.}"
 
-	mv ${PROJECT_DIR}/${TOOL_NAME}.tmp.log ${PROJECT_DIR}/${1}/${TOOL_NAME}.${1}.log_test_29_09
+	$PIN_ROOT/pin -xyzzy -reserve_memory ${PINBALL_DIR}/cpu2006-${benchmark}-ref-1/pinball.address -t ${PROJECT_DIR}/obj-intel64/${TOOL_NAME}.so -o ${PROJECT_DIR}/${1}/${1}.log_ref_03_10 -replay -replay:basename ${PINBALL_DIR}/cpu2006-${benchmark}-ref-1/pinball -- $PIN_ROOT/extras/pinplay/bin/intel64/nullapp
 
 }
 
@@ -38,8 +39,24 @@ source shrc
 echo "Compiling 'page_simulator_tool.cpp'"
 (cd ${PROJECT_DIR} && make dir obj-intel64/${TOOL_NAME}.so)
 
+echo $1 = $2
+if [ "$2" -eq "1" ]; then
 
-benchmarks=( 410.bwaves 429.mcf 434.zeusmp 436.cactusADM 459.GemsFDTD 400.perlbench 401.bzip2 403.gcc 481.wrf 433.milc )
+	benchmarks=( 410.bwaves 429.mcf 434.zeusmp 436.cactusADM )
+
+elif [ "$2" -eq "2" ]; then
+
+	benchmarks=( 459.GemsFDTD 400.perlbench 401.bzip2 )
+
+elif [ "$2" -eq "3" ]; then
+
+	benchmarks=( 481.wrf 433.milc )
+
+else
+	
+	benchmarks=( 410.bwaves 429.mcf 434.zeusmp 436.cactusADM 459.GemsFDTD 400.perlbench 401.bzip2 481.wrf 433.milc )
+
+fi
 
 # Iterates only directories, which are the benchmarks
 for d in ${benchmarks[@]}; do

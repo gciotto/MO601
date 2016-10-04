@@ -2,12 +2,13 @@
 #include <fstream>
 
 #include "pin.H"
+#include "pinplay.H"
 
 typedef UINT32 CACHE_STATS; // type of cache hit/miss counters
 
 #include "pin_cache.H"
 
-#define TABLE_TREE_LEVEL 3
+#define TABLE_TREE_LEVEL 3 
 
 enum page_size {
 	PAGE_4KB,
@@ -48,9 +49,6 @@ typedef CACHE_ROUND_ROBIN(max_sets, max_associativity, allocation) CACHE;
 LOCALVAR TLB_4M::CACHE itlb_4m("ITLB_4M", TLB_4M::cacheSize, TLB_4M::lineSize, TLB_4M::associativity);
 LOCALVAR TLB_4M::CACHE dtlb_4m("DTLB_4M", TLB_4M::cacheSize, TLB_4M::lineSize, TLB_4M::associativity);
 
-LOCALVAR UINT32 imem_access[N_PAGE];
-LOCALVAR UINT32 dmem_access[N_PAGE];
-
 /* Output file handler */
 ofstream OutFile;
 
@@ -60,6 +58,15 @@ ofstream OutFile;
 KNOB<string> KnobOutputFile(KNOB_MODE_WRITEONCE, "pintool",
 		"o", "most-used.out", "specify output file name");
 
+/* PinPlay requirements */
+PINPLAY_ENGINE pinplay_engine;
+KNOB<BOOL> KnobPinPlayLogger(KNOB_MODE_WRITEONCE, 
+                      "pintool", "log", "0",
+                      "Activate the pinplay logger");
+KNOB<BOOL> KnobPinPlayReplayer(KNOB_MODE_WRITEONCE, 
+                      "pintool", "replay", "0",
+                      "Activate the pinplay replayer");
+
 
 LOCALFUN VOID Fini(int code, VOID * v)
 {
@@ -68,92 +75,80 @@ LOCALFUN VOID Fini(int code, VOID * v)
 	OutFile << itlb_4k;
 	OutFile << dtlb_4k;
 
-	unsigned int i;
-
 	OutFile << "Instruction memory accesses:" << endl;
-	for (i = 0; i < N_PAGE; i++) {
-		OutFile << "|---" << imem_access[i] << endl;
-	}
+	OutFile << "|--- (4MB) " << itlb_4m.Misses() * TABLE_TREE_LEVEL << endl;
+	OutFile << "|--- (4KB) " << itlb_4k.Misses() * TABLE_TREE_LEVEL << endl;
+
 
 	OutFile << "Data memory accesses:" << endl;
-	for (i = 0; i < N_PAGE; i++) {
-		OutFile << "|---" << dmem_access[i] << endl;
-	}
+	OutFile << "|--- (4MB) " << dtlb_4m.Misses() * TABLE_TREE_LEVEL << endl;
+	OutFile << "|--- (4KB) " << dtlb_4k.Misses() * TABLE_TREE_LEVEL << endl;
 }
 
-LOCALFUN VOID checkInstructionTLB(ADDRINT addr) {
+LOCALFUN VOID checkDataTLB(ADDRINT addr, BOOL access_type) {
 
-	bool hit;
+	CACHE_BASE::ACCESS_TYPE _access = access_type ? CACHE_BASE::ACCESS_TYPE_LOAD : CACHE_BASE::ACCESS_TYPE_STORE;
 
-	hit = itlb_4k.AccessSingleLine(addr, CACHE_BASE::ACCESS_TYPE_LOAD);
+	dtlb_4k.AccessSingleLine(addr, _access);
 
-	if (!hit) imem_access[PAGE_4KB] += TABLE_TREE_LEVEL;
-
-	hit = itlb_4m.AccessSingleLine(addr, CACHE_BASE::ACCESS_TYPE_LOAD);
-
-	if (!hit) imem_access[PAGE_4MB] += TABLE_TREE_LEVEL;
+	dtlb_4m.AccessSingleLine(addr, _access);
 
 }
 
-LOCALFUN VOID checkDataTLB(ADDRINT addr) {
+LOCALFUN VOID BBL_analysisCallBack (ADDRINT addr, UINT32 size) {
 
-	bool hit;
+	itlb_4k.Access(addr, size, CACHE_BASE::ACCESS_TYPE_LOAD);
 
-	hit = dtlb_4k.AccessSingleLine(addr, CACHE_BASE::ACCESS_TYPE_LOAD);
-
-	if (!hit) dmem_access[PAGE_4KB] += TABLE_TREE_LEVEL;
-
-	hit = dtlb_4m.AccessSingleLine(addr, CACHE_BASE::ACCESS_TYPE_LOAD);
-
-	if (!hit) dmem_access[PAGE_4MB] += TABLE_TREE_LEVEL;
-
+	itlb_4m.Access(addr, size, CACHE_BASE::ACCESS_TYPE_LOAD);
 }
 
-LOCALFUN VOID initInstrCallBack(INS ins, VOID *v)
-{
-	// all instruction fetches access I-cache
-	INS_InsertCall(
-			ins, IPOINT_BEFORE, (AFUNPTR) checkInstructionTLB,
-			IARG_INST_PTR,
-			IARG_END);
+LOCALFUN VOID initTraceCallBack(TRACE trace, VOID *v) {
 
-	if (INS_IsMemoryRead(ins) && INS_IsStandardMemop(ins))
-	{
+	for (BBL bbl = TRACE_BblHead(trace); BBL_Valid(bbl); bbl = BBL_Next(bbl)) {
 
-		// only predicated-on memory instructions access D-cache
-		INS_InsertPredicatedCall(
-				ins, IPOINT_BEFORE, (AFUNPTR) checkDataTLB,
-				IARG_MEMORYREAD_EA,
-				IARG_END);
+		ADDRINT address = BBL_Address(bbl);
+
+		/* Checks INSTRUCTION TLB */
+		BBL_InsertCall (bbl, IPOINT_BEFORE,
+						(AFUNPTR) BBL_analysisCallBack,
+						IARG_ADDRINT, address,
+						IARG_UINT32, BBL_Size(bbl),
+						IARG_END);						
+
+		for(INS ins = BBL_InsHead(bbl); INS_Valid(ins); ins = INS_Next(ins)) {
+
+			/* Checks DATA TLB */
+			if ((INS_IsMemoryRead(ins) || INS_IsMemoryWrite(ins) ) && INS_IsStandardMemop(ins)) {
+
+				IARG_TYPE arg_t = INS_IsMemoryRead(ins) ? IARG_MEMORYREAD_EA : IARG_MEMORYWRITE_EA;
+				BOOL access_t = INS_IsMemoryRead(ins) ? 0 : 1; 
+
+				// only predicated-on memory instructions access D-cache
+				INS_InsertPredicatedCall(
+						ins, IPOINT_BEFORE, (AFUNPTR) checkDataTLB,
+						arg_t, IARG_BOOL, access_t,
+						IARG_END);
+			}
+		}
 	}
 
-	if (INS_IsMemoryWrite(ins) && INS_IsStandardMemop(ins))	{
-
-		// only predicated-on memory instructions access D-cache
-		INS_InsertPredicatedCall(
-				ins, IPOINT_BEFORE, (AFUNPTR) checkDataTLB,
-				IARG_MEMORYWRITE_EA,
-				IARG_END);
-	}
 }
 
 GLOBALFUN int main(int argc, char *argv[])
 {
 	PIN_Init(argc, argv);
 
+	pinplay_engine.Activate(argc, argv, KnobPinPlayLogger, KnobPinPlayReplayer);
+
 	OutFile.open(KnobOutputFile.Value().c_str(), ofstream::out);
 
-	unsigned int i;
-	for (i = 0; i < N_PAGE; i++) {
-		imem_access[i] = 0;
-		dmem_access[i] = 0;
-	}
+	TRACE_AddInstrumentFunction(initTraceCallBack, 0);
 
-	INS_AddInstrumentFunction(initInstrCallBack, 0);
 	PIN_AddFiniFunction(Fini, 0);
 
 	PIN_StartProgram();
 
 	return 0;
 }
+
 
