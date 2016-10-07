@@ -6,8 +6,8 @@
 #include <unistd.h>
 
 #define PAGE_SIZE 4*1024 // 4KB pages
-#define NUMBER_OF_PAGES_LEVEL_1 1000
-#define NUMBER_OF_PAGES_LEVEL_2 120
+#define NUMBER_OF_PAGES_LEVEL_1 1024
+#define NUMBER_OF_PAGES_LEVEL_2 128
 
 #define RANDOM_ACCESSES 15000
 
@@ -38,8 +38,9 @@ int main () {
 		*(double_pointer_array + i) = (double*) malloc (NUMBER_OF_PAGES_LEVEL_2 * double_per_page * sizeof(double));
 	
 	for (i = 0; i < (NUMBER_OF_PAGES_LEVEL_1 * int_pointer_per_page); i++)
-		*(int_pointer_array + i) = (int*) malloc (NUMBER_OF_PAGES_LEVEL_2 * int_per_page * sizeof(double));		
-	
+		*(int_pointer_array + i) = (int*) malloc (NUMBER_OF_PAGES_LEVEL_2 * int_per_page * sizeof(double));			
+
+	cout << "Passou alocacao de memoria L1" << endl;
 
 	// First, we access and define all positions. We could have been done it at the same time as we created the arrays.
 	// NUMBER_OF_ACCESSES = (NUMBER_OF_PAGES_LEVEL_1 * double_pointer_per_page) * (i < NUMBER_OF_PAGES_LEVEL_2 * double_per_page)
@@ -54,6 +55,8 @@ int main () {
 			*(*(int_pointer_array + i) + j) = rand();
 		}
 
+	cout << "Passou alocacao de memoria L2" << endl;
+
 	// Access them randomly RANDOM_ACCESSES times
 	for (k = 0; k < RANDOM_ACCESSES; k++) {
 		i = (unsigned int) (rand () % (NUMBER_OF_PAGES_LEVEL_1 * double_pointer_per_page));
@@ -62,6 +65,8 @@ int main () {
 		*(*(double_pointer_array + i) + j) = (i - j);
 	}
 
+	cout << "Passou acessos aleatorios em double**" << endl;
+
 	// Access them randomly RANDOM_ACCESSES times
 	for (k = 0; k < RANDOM_ACCESSES; k++) {
 		i = (unsigned int) rand () % (NUMBER_OF_PAGES_LEVEL_1 * int_pointer_per_page);
@@ -69,6 +74,8 @@ int main () {
 
 		*(*(int_pointer_array + i) + j) =  (i + j);
 	}
+
+	cout << "Passou acessos aleatorios em int**" << endl;
 
 	// Save all in file
 	// NUMBER_OF_ACCESSES = (NUMBER_OF_PAGES_LEVEL_1 * double_pointer_per_page) * (i < NUMBER_OF_PAGES_LEVEL_2 * double_per_page)
@@ -80,6 +87,8 @@ int main () {
 
 	free(double_pointer_array);
 
+	cout << "Passou salvar em arquivo double**" << endl;
+
 	// NUMBER_OF_ACCESSES = (NUMBER_OF_PAGES_LEVEL_1 * int_pointer_per_page) * (i < NUMBER_OF_PAGES_LEVEL_2 * int_per_page)
 	for (i = 0; i < (NUMBER_OF_PAGES_LEVEL_1 * int_pointer_per_page); i++) {
 		for (j = 0; j < (NUMBER_OF_PAGES_LEVEL_2 * int_per_page); j++) 
@@ -88,6 +97,8 @@ int main () {
 	}
 
 	free(int_pointer_array);
+
+	cout << "Passou salvar em arquivo int**" << endl;
 
 	myfile.close();
 

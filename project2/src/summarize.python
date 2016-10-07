@@ -1,0 +1,60 @@
+#!/usr/bin/python
+
+import os
+
+project_dir = "/home/gciotto/MO601-117136/project2/src/"
+benchmarks = ["410.bwaves", "429.mcf", "434.zeusmp", "436.cactusADM", "459.GemsFDTD", "400.perlbench", "401.bzip2", "481.wrf", "433.milc", "403.gcc"]
+suffix = "06_10"
+
+dict = {}
+
+if __name__ == '__main__' :
+
+	for benchmark in benchmarks:
+		print project_dir + benchmark
+		
+		if not benchmark in dict:
+			dict[benchmark] = {}
+		
+		for (dirpath, dirnames, filenames) in os.walk(project_dir + benchmark):
+			for filename in filenames:
+				begin = filename.index("_0-") + 3
+				end = filename.index(".log") 
+
+				region_ratio = float(filename [begin : end]) / 1e5
+
+				f = open(project_dir + benchmark + "/" + filename,'r')
+
+				for line in f.readlines() :
+					
+					if not ":" in line : continue
+					
+					line =  line.strip().split()
+
+					if "TLB" in line[0]:
+						key = line[0][: line[0].index(":")]
+						
+						if not key in dict[benchmark]:
+							dict[benchmark][key] = {}
+
+						continue
+					
+					if line[0] in ['Store', 'Load']:
+
+						_access_type = line[1][:-1]
+
+						if _access_type in ['Hits', 'Misses', 'Accesses'] :
+						
+							if not (line[0] + _access_type) in dict[benchmark][key]:
+								dict[benchmark][key][line[0] + _access_type] = 0
+
+							dict[benchmark][key][line[0] + _access_type] = dict[benchmark][key][line[0] + _access_type] + region_ratio * float (line[2])
+					
+		print benchmark
+		
+		for cache in dict[benchmark]:
+
+			print '|-- ' + cache
+			for type in dict[benchmark][cache]:
+
+				print '  |-- %s = %.2f'  % (type, dict[benchmark][cache][type])

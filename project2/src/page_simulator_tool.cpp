@@ -85,13 +85,20 @@ LOCALFUN VOID Fini(int code, VOID * v)
 	OutFile << "|--- (4KB) " << dtlb_4k.Misses() * TABLE_TREE_LEVEL << endl;
 }
 
-LOCALFUN VOID checkDataTLB(ADDRINT addr, BOOL access_type) {
+LOCALFUN VOID checkDataTLB(ADDRINT addr, UINT32 size, BOOL access_type) {
 
 	CACHE_BASE::ACCESS_TYPE _access = access_type ? CACHE_BASE::ACCESS_TYPE_LOAD : CACHE_BASE::ACCESS_TYPE_STORE;
 
-	dtlb_4k.AccessSingleLine(addr, _access);
+	if (size <= 4) {
 
-	dtlb_4m.AccessSingleLine(addr, _access);
+		dtlb_4k.AccessSingleLine(addr, _access);
+		dtlb_4m.AccessSingleLine(addr, _access);
+	}
+	else {
+
+		dtlb_4k.Access(addr, size, _access);
+		dtlb_4m.Access(addr, size, _access);
+	}
 
 }
 
@@ -117,17 +124,27 @@ LOCALFUN VOID initTraceCallBack(TRACE trace, VOID *v) {
 
 		for(INS ins = BBL_InsHead(bbl); INS_Valid(ins); ins = INS_Next(ins)) {
 
-			/* Checks DATA TLB */
-			if ((INS_IsMemoryRead(ins) || INS_IsMemoryWrite(ins) ) && INS_IsStandardMemop(ins)) {
 
-				IARG_TYPE arg_t = INS_IsMemoryRead(ins) ? IARG_MEMORYREAD_EA : IARG_MEMORYWRITE_EA;
-				BOOL access_t = INS_IsMemoryRead(ins) ? 0 : 1; 
+			if (INS_IsStandardMemop(ins)) {
 
-				// only predicated-on memory instructions access D-cache
-				INS_InsertPredicatedCall(
-						ins, IPOINT_BEFORE, (AFUNPTR) checkDataTLB,
-						arg_t, IARG_BOOL, access_t,
-						IARG_END);
+				BOOL access_t = INS_IsMemoryRead(ins) ? 0 : 1;
+
+				/* Checks DATA TLB */
+				if (INS_IsMemoryRead(ins))
+					// only predicated-on memory instructions access D-cache
+					INS_InsertPredicatedCall(
+							ins, IPOINT_BEFORE, (AFUNPTR) checkDataTLB,
+							IARG_MEMORYREAD_EA, IARG_MEMORYREAD_SIZE , IARG_BOOL, access_t,
+							IARG_END);					
+
+
+				if (INS_IsMemoryWrite(ins))
+					// only predicated-on memory instructions access D-cache
+					INS_InsertPredicatedCall(
+							ins, IPOINT_BEFORE, (AFUNPTR) checkDataTLB,
+							IARG_MEMORYWRITE_EA, IARG_MEMORYWRITE_SIZE, IARG_BOOL, access_t,
+							IARG_END);
+				
 			}
 		}
 	}
