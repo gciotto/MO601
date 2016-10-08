@@ -10,6 +10,9 @@ dict = {}
 
 if __name__ == '__main__' :
 
+	f_KB = open('results_4KB.csv', 'w')
+	f_MB = open('results_4MB.csv', 'w')
+
 	for benchmark in benchmarks:
 		print project_dir + benchmark
 		
@@ -21,7 +24,7 @@ if __name__ == '__main__' :
 				begin = filename.index("_0-") + 3
 				end = filename.index(".log") 
 
-				region_ratio = float(filename [begin : end]) / 1e5
+				region_ratio = float(filename [begin : end])
 
 				f = open(project_dir + benchmark + "/" + filename,'r')
 
@@ -39,7 +42,7 @@ if __name__ == '__main__' :
 
 						continue
 					
-					if line[0] in ['Store', 'Load']:
+					if line[0] in ['Store', 'Load', 'Total']:
 
 						_access_type = line[1][:-1]
 
@@ -51,10 +54,27 @@ if __name__ == '__main__' :
 							dict[benchmark][key][line[0] + _access_type] = dict[benchmark][key][line[0] + _access_type] + region_ratio * float (line[2])
 					
 		print benchmark
+		print dict[benchmark]		
+
 		
-		for cache in dict[benchmark]:
+		f_KB.write(benchmark[4:] + '.ref1,')
+		f_MB.write(benchmark[4:] + '.ref1,')
+	
+		itlb_4KB = dict[benchmark]["ITLB_4K"]
+		itlb_4MB = dict[benchmark]["ITLB_4M"]
 
-			print '|-- ' + cache
-			for type in dict[benchmark][cache]:
+		dtlb_4KB = dict[benchmark]["DTLB_4K"]
+		dtlb_4MB = dict[benchmark]["DTLB_4M"]
 
-				print '  |-- %s = %.2f'  % (type, dict[benchmark][cache][type])
+		f_KB.write("%d,%d,%d," % ((itlb_4KB["TotalAccesses"] + 3*itlb_4KB["TotalMisses"]), itlb_4KB["TotalMisses"], 3*itlb_4KB["TotalMisses"]))
+		f_KB.write("%d,%d,%d,\n" % ((dtlb_4KB["TotalAccesses"] + 3*dtlb_4KB["TotalMisses"]), dtlb_4KB["TotalMisses"], 3*dtlb_4KB["TotalMisses"]))
+
+		f_MB.write("%d,%d,%d," % ((itlb_4MB["TotalAccesses"] + 3*itlb_4MB["TotalMisses"]), itlb_4MB["TotalMisses"], 3*itlb_4MB["TotalMisses"]))
+		f_MB.write("%d,%d,%d,\n" % ((dtlb_4MB["TotalAccesses"] + 3*dtlb_4MB["TotalMisses"]), dtlb_4MB["TotalMisses"], 3*dtlb_4MB["TotalMisses"]))
+		
+	f_KB.close()
+	f_MB.close()
+
+			
+				
+			
