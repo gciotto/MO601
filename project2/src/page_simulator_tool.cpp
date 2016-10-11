@@ -57,10 +57,8 @@ namespace L1
 
     typedef CACHE_ROUND_ROBIN(max_sets, max_associativity, allocation) CACHE;
 }
-LOCALVAR L1::CACHE il1_4k("L1 4KB Instruction Cache", L1::cacheSize, L1::lineSize, L1::associativity);
-LOCALVAR L1::CACHE dl1_4k("D1 4KB Instruction Cache", L1::cacheSize, L1::lineSize, L1::associativity);
-LOCALVAR L1::CACHE il1_4m("L1 4MB Instruction Cache", L1::cacheSize, L1::lineSize, L1::associativity);
-LOCALVAR L1::CACHE dl1_4m("D1 4MB Instruction Cache", L1::cacheSize, L1::lineSize, L1::associativity);
+LOCALVAR L1::CACHE il1("L1 Instruction Cache", L1::cacheSize, L1::lineSize, L1::associativity);
+LOCALVAR L1::CACHE dl1("D1 Instruction Cache", L1::cacheSize, L1::lineSize, L1::associativity);
 
 namespace UL2
 {
@@ -74,8 +72,7 @@ namespace UL2
 
     typedef CACHE_DIRECT_MAPPED(max_sets, allocation) CACHE;
 }
-LOCALVAR UL2::CACHE ul2_4k("L2 4KB Unified Cache", UL2::cacheSize, UL2::lineSize, UL2::associativity);
-LOCALVAR UL2::CACHE ul2_4m("L2 4MB Unified Cache", UL2::cacheSize, UL2::lineSize, UL2::associativity);
+LOCALVAR UL2::CACHE ul2("L2 Unified Cache", UL2::cacheSize, UL2::lineSize, UL2::associativity);
 
 namespace UL3
 {
@@ -89,8 +86,9 @@ namespace UL3
 
     typedef CACHE_DIRECT_MAPPED(max_sets, allocation) CACHE;
 }
-LOCALVAR UL3::CACHE ul3_4k("L3 4KB Unified Cache", UL3::cacheSize, UL3::lineSize, UL3::associativity);
-LOCALVAR UL3::CACHE ul3_4m("L3 4MB Unified Cache", UL3::cacheSize, UL3::lineSize, UL3::associativity);
+LOCALVAR UL3::CACHE ul3("L3 Unified Cache", UL3::cacheSize, UL3::lineSize, UL3::associativity);
+
+UINT64 instruction_misses, data_misses;
 
 /* Output file handler */
 ofstream OutFile;
@@ -119,72 +117,62 @@ LOCALFUN VOID Fini(int code, VOID * v)
 	OutFile << itlb_4k;
 	OutFile << dtlb_4k;
 
-	OutFile << il1_4k;
-	OutFile << dl1_4k;
+	OutFile << il1;
+	OutFile << dl1;
 
-	OutFile << il1_4m;
-	OutFile << dl1_4m;
+	OutFile << ul2;
 
-	OutFile << ul2_4k;
-	OutFile << ul2_4m;
+	OutFile << ul3;
 
-	OutFile << ul3_4k;
-	OutFile << ul3_4m;
+	OutFile << "Instruction_Memory:" << endl;
+	OutFile << "Total Misses: "  << instruction_misses << endl;
 
+	OutFile << "Data_memory:" << endl;
+	OutFile << "Total Misses: "  << data_misses << endl;
 }
 
 LOCALFUN VOID checkDataTLB(ADDRINT addr, UINT32 size, BOOL access_type) {
 
 	CACHE_BASE::ACCESS_TYPE _access = access_type ? CACHE_BASE::ACCESS_TYPE_LOAD : CACHE_BASE::ACCESS_TYPE_STORE;
 
-	BOOL hit_4k = 0, hit_4m = 0;
+	BOOL hit = 0;
 
 	dtlb_4k.Access(addr, size, _access);
 	dtlb_4m.Access(addr, size, _access);
 
-	hit_4k = dl1_4k.Access(addr, size, _access);
-	hit_4m = dl1_4m.Access(addr, size, _access);
+	hit = dl1.Access(addr, size, _access);
 
-	if (!hit_4k) {
+	if (!hit) {
 
-		hit_4k = ul2_4k.Access(addr, size, _access);
-		if (!hit_4k) 
-			ul3_4k.Access(addr, size, _access);
-	}
+		hit = ul2.Access(addr, size, _access);
 
-	if (!hit_4m) {
-
-		hit_4m = ul2_4m.Access(addr, size, _access);
-		if (!hit_4m) 
-			ul3_4m.Access(addr, size, _access);			
+		if (!hit){ 
+		
+			ul3.Access(addr, size, _access);
+			data_misses++;
+		}
 	}
 
 }
 
 LOCALFUN VOID BBL_analysisCallBack (ADDRINT addr, UINT32 size) {
 
-	BOOL hit_4k, hit_4m;
+	BOOL hit;
 
 	itlb_4k.Access(addr, size, CACHE_BASE::ACCESS_TYPE_LOAD);
 	itlb_4m.Access(addr, size, CACHE_BASE::ACCESS_TYPE_LOAD);
 
-	hit_4k = il1_4k.Access(addr, size, CACHE_BASE::ACCESS_TYPE_LOAD);
-	hit_4m = il1_4m.Access(addr, size, CACHE_BASE::ACCESS_TYPE_LOAD);
+	hit = il1.Access(addr, size, CACHE_BASE::ACCESS_TYPE_LOAD);
 
-	if (!hit_4k) {
+	if (!hit) {
 
-		hit_4k = ul2_4k.Access(addr, size, CACHE_BASE::ACCESS_TYPE_LOAD);
+		hit = ul2.Access(addr, size, CACHE_BASE::ACCESS_TYPE_LOAD);
 
-		if (!hit_4k)
-			ul3_4k.Access(addr, size, CACHE_BASE::ACCESS_TYPE_LOAD);
-	}
-
-	if (!hit_4m) {
-
-		hit_4m = ul2_4m.Access(addr, size, CACHE_BASE::ACCESS_TYPE_LOAD);
-
-		if (!hit_4m)
-			ul3_4m.Access(addr, size, CACHE_BASE::ACCESS_TYPE_LOAD);
+		if (!hit) {
+			
+			ul3.Access(addr, size, CACHE_BASE::ACCESS_TYPE_LOAD);
+			instruction_misses++;
+		}
 	}
 }
 
@@ -237,6 +225,8 @@ GLOBALFUN int main(int argc, char *argv[])
 	pinplay_engine.Activate(argc, argv, KnobPinPlayLogger, KnobPinPlayReplayer);
 
 	OutFile.open(KnobOutputFile.Value().c_str(), ofstream::out);
+
+	instruction_misses = data_misses = 0;
 
 	TRACE_AddInstrumentFunction(initTraceCallBack, 0);
 
