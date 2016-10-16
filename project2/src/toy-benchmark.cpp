@@ -7,7 +7,7 @@
 
 #define PAGE_SIZE 4*1024 // 4KB pages
 #define NUMBER_OF_PAGES_LEVEL_1 1024
-#define NUMBER_OF_PAGES_LEVEL_2 128
+#define NUMBER_OF_PAGES_LEVEL_2 64
 
 #define RANDOM_ACCESSES 15000
 
@@ -81,7 +81,8 @@ int main () {
 	// NUMBER_OF_ACCESSES = (NUMBER_OF_PAGES_LEVEL_1 * double_pointer_per_page) * (i < NUMBER_OF_PAGES_LEVEL_2 * double_per_page)
 	for (i = 0; i < (NUMBER_OF_PAGES_LEVEL_1 * double_pointer_per_page); i++) {
 		for (j = 0; j < (NUMBER_OF_PAGES_LEVEL_2 * double_per_page); j++)
-			myfile << *(*(double_pointer_array + i) + j) << endl;
+			// myfile << *(*(double_pointer_array + i) + j) << endl;
+			*(*(double_pointer_array + i) + j) = 0;
 		free(*(double_pointer_array + i));
 	}
 
@@ -92,7 +93,8 @@ int main () {
 	// NUMBER_OF_ACCESSES = (NUMBER_OF_PAGES_LEVEL_1 * int_pointer_per_page) * (i < NUMBER_OF_PAGES_LEVEL_2 * int_per_page)
 	for (i = 0; i < (NUMBER_OF_PAGES_LEVEL_1 * int_pointer_per_page); i++) {
 		for (j = 0; j < (NUMBER_OF_PAGES_LEVEL_2 * int_per_page); j++) 
-			myfile << *(*(int_pointer_array + i) + j) << endl;
+			//myfile << *(*(int_pointer_array + i) + j) << endl;
+			*(*(int_pointer_array + i) + j) = 0;
 		free(*(int_pointer_array + i));
 	}
 

@@ -50,7 +50,7 @@ namespace L1
     const UINT32 cacheSize = 64*KILO;
     const UINT32 lineSize = 64;
     const UINT32 associativity = 64;
-    const CACHE_ALLOC::STORE_ALLOCATION allocation = CACHE_ALLOC::STORE_NO_ALLOCATE;
+    const CACHE_ALLOC::STORE_ALLOCATION allocation = CACHE_ALLOC::STORE_ALLOCATE;
 
     const UINT32 max_sets = cacheSize / (lineSize * associativity);
     const UINT32 max_associativity = associativity;

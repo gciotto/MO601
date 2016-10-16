@@ -19,6 +19,7 @@ TOOL_NAME=page_simulator_tool
 export PIN_ROOT=${PIN_DIR}
 export PROJECT_DIR=${PWD}
 PINBALL_DIR=${PROJECT_DIR}/cpu2006_pinballs
+SUFFIX=16_10
 
 echo $PROJECT_DIR
 
@@ -34,7 +35,7 @@ function runPintoolForBenchmark {
 		pinball_name=$(basename ${pinball_prefix})
 		echo ${pinball_name}
 
-		$PIN_ROOT/pin -xyzzy -reserve_memory ${pinball_prefix}.address -t ${PROJECT_DIR}/obj-intel64/${TOOL_NAME}.so -o ${PROJECT_DIR}/${1}/${pinball_name}.log_ref_06_10 -replay -replay:basename ${pinball_prefix} -- $PIN_ROOT/extras/pinplay/bin/intel64/nullapp
+		$PIN_ROOT/pin -xyzzy -reserve_memory ${pinball_prefix}.address -t ${PROJECT_DIR}/obj-intel64/${TOOL_NAME}.so -o ${PROJECT_DIR}/${1}/${pinball_name}.log_ref_${SUFFIX} -replay -replay:basename ${pinball_prefix} -- $PIN_ROOT/extras/pinplay/bin/intel64/nullapp
 	
 	done
 
@@ -91,5 +92,7 @@ echo "Compiling 'toy-benchmark.cpp'"
 g++ -O2 -o ${PROJECT_DIR}/toy_b ${PROJECT_DIR}/toy-benchmark.cpp
 
 echo "Running 'toy-benchmark.cpp' with pin"
-$PIN_ROOT/pin -t ${PROJECT_DIR}/obj-intel64/${TOOL_NAME}.so -o  ${PROJECT_DIR}/toy/toy.log_06_10 -- ${PROJECT_DIR}/toy_b
+$PIN_ROOT/pin -t ${PROJECT_DIR}/obj-intel64/${TOOL_NAME}.so -o  ${PROJECT_DIR}/toy/toy.log_${SUFFIX} -- ${PROJECT_DIR}/toy_b
+
+# systemctl suspend
 
