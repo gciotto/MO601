@@ -3,7 +3,7 @@ A fim de calcular o número de entradas disponíveis no RAS do processador Intel
 
 ## Parâmetros
 
-O laço mais interno produz valores do número de chamadas variando de 2 até 512 com intervalo de 2 entre cada um, enquanto que o mais externo executa este primeiro 64 vezes. Estes parâmetros são configurados através das constantes `MAX_RECURSION` e `NUMBER_ITERATIONS`, respectivamente.
+O laço mais interno produz valores do número de chamadas variando de 2 até 512 com intervalo de 2 entre cada um, enquanto que o mais externo executa este primeiro 10000 vezes. Estes parâmetros são configurados através das constantes `MAX_RECURSION` e `NUMBER_ITERATIONS`, respectivamente.
 
 ## Execução
 
