@@ -2,7 +2,7 @@
 
 Este diretório possui todos os arquivos e programas utilizados para as tarefas designadas para o Projeto 2.
 
-## Execução da *pintool* sobre os *benchmarks*
+## Execução da *pintool* nos *benchmarks*
 
 Para esta tarefa, utilizamos os seguintes arquivos:
 
@@ -29,3 +29,5 @@ O *script* `run-pintool.sh` necessita receber algum parâmetro de entrada, dentr
 - `all` : executa todos os 10 *benchmarks*
 - benchmark : executes aquele *benchmark*. Por exemplo, `./run-pintool.sh 403.gcc` executa somente o *benchmark* gcc.
 - `toy` : executa somente o *benchmark* toy.
+
+Para executar todos os *benchmarks*, basta rodas `./run-pintool.sh all`. O *script* também realiza a compilação de qualquer arquivo necessário.
