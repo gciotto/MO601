@@ -13,7 +13,6 @@
 # Author: Gustavo CIOTTO PINTON RA 117136
 # Computer Architecture II MO601B
 
-SPEC_DIR=/home/gciotto/SPEC2006
 PIN_DIR=/home/gciotto/pinplay-drdebug-pldi2016-3.0-pin-3.0-76991-gcc-linux
 TOOL_NAME=page_simulator_tool
 export PIN_ROOT=${PIN_DIR}
@@ -22,6 +21,8 @@ PINBALL_DIR=${PROJECT_DIR}/cpu2006_pinballs
 SUFFIX=16_10
 
 echo $PROJECT_DIR
+
+run_toy=false
 
 function runPintoolForBenchmark {
 		
@@ -55,10 +56,12 @@ elif [ "$1" = "fp" ]; then
 
 elif [ "$1" = "all" ]; then
 
+	run_toy=true
 	benchmarks=( 410.bwaves 429.mcf 434.zeusmp 436.cactusADM 459.GemsFDTD 400.perlbench 401.bzip2 481.wrf 433.milc 403.gcc )
 
 elif [ "$1" = "toy" ]; then
 
+	run_toy=true
 	benchmarks=( )
 
 elif [ "$2" = "1" ]; then
@@ -86,13 +89,16 @@ for d in ${benchmarks[@]}; do
 	runPintoolForBenchmark "${d}"
 done
 
-# run toy benchmark 
-mkdir ${PROJECT_DIR}/toy &> /dev/null
-echo "Compiling 'toy-benchmark.cpp'"
-g++ -O2 -o ${PROJECT_DIR}/toy_b ${PROJECT_DIR}/toy-benchmark.cpp
+if [ "$run_toy" = true ] ; then
 
-echo "Running 'toy-benchmark.cpp' with pin"
-$PIN_ROOT/pin -t ${PROJECT_DIR}/obj-intel64/${TOOL_NAME}.so -o  ${PROJECT_DIR}/toy/toy.log_${SUFFIX} -- ${PROJECT_DIR}/toy_b
+	# run toy benchmark 
+	mkdir ${PROJECT_DIR}/toy &> /dev/null
+	echo "Compiling 'toy-benchmark.cpp'"
+	g++ -O2 -o ${PROJECT_DIR}/toy_b ${PROJECT_DIR}/toy-benchmark.cpp
 
-# systemctl suspend
+	echo "Running 'toy-benchmark.cpp' with pin"
+	$PIN_ROOT/pin -t ${PROJECT_DIR}/obj-intel64/${TOOL_NAME}.so -o  ${PROJECT_DIR}/toy/toy.log_${SUFFIX} -- ${PROJECT_DIR}/toy_b
+
+	# systemctl suspend
+fi
 
