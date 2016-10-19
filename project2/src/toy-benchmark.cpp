@@ -6,8 +6,8 @@
 #include <unistd.h>
 
 #define PAGE_SIZE 4*1024 // 4KB pages
-#define NUMBER_OF_PAGES_LEVEL_1 1024
-#define NUMBER_OF_PAGES_LEVEL_2 64
+#define NUMBER_OF_PAGES_LEVEL_1 512
+#define NUMBER_OF_PAGES_LEVEL_2 1
 
 #define RANDOM_ACCESSES 15000
 
@@ -25,10 +25,10 @@ int main () {
 			int_pointer_s = sizeof (int*),
 			int_s = sizeof(int);
 
-	unsigned int 	double_pointer_per_page = PAGE_SIZE >> double_pointer_s,
-			double_per_page = PAGE_SIZE >> double_s,
-			int_pointer_per_page = PAGE_SIZE >> int_pointer_s,
-			int_per_page = PAGE_SIZE >> int_s;
+	unsigned int 	double_pointer_per_page = PAGE_SIZE / double_pointer_s,
+			double_per_page = PAGE_SIZE / double_s,
+			int_pointer_per_page = PAGE_SIZE / int_pointer_s,
+			int_per_page = PAGE_SIZE / int_s;
 
 	double* 	*double_pointer_array = (double**) malloc (NUMBER_OF_PAGES_LEVEL_1 * double_pointer_per_page * sizeof (double*));
 	int*		*int_pointer_array = (int**) malloc (NUMBER_OF_PAGES_LEVEL_1 * int_pointer_per_page * sizeof (int*));
