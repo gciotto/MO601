@@ -30,4 +30,4 @@ O *script* `run-pintool.sh` necessita receber algum parâmetro de entrada, dentr
 - benchmark : executes aquele *benchmark*. Por exemplo, `./run-pintool.sh 403.gcc` executa somente o *benchmark* gcc.
 - `toy` : executa somente o *benchmark* toy.
 
-Para executar todos os *benchmarks*, basta rodas `./run-pintool.sh all`. O *script* também realiza a compilação de qualquer arquivo necessário.
+Para executar todos os *benchmarks*, basta rodar `./run-pintool.sh all`. O *script* também realiza a compilação de qualquer arquivo necessário.
