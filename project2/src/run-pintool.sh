@@ -18,7 +18,7 @@ TOOL_NAME=page_simulator_tool
 export PIN_ROOT=${PIN_DIR}
 export PROJECT_DIR=${PWD}
 PINBALL_DIR=${PROJECT_DIR}/cpu2006_pinballs
-SUFFIX=16_10
+SUFFIX=22_10
 
 echo $PROJECT_DIR
 

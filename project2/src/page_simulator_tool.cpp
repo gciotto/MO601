@@ -46,10 +46,10 @@ LOCALVAR TLB_4M::CACHE dtlb_4m("DTLB_4M", TLB_4M::cacheSize, TLB_4M::lineSize, T
 
 namespace L1
 {
-    // 1st level instruction cache: 32 kB, 32 B lines, 32-way associative
-    const UINT32 cacheSize = 64*KILO;
+    // 1st level instruction cache: 32 kB, 64 B lines, 8-way associative
+    const UINT32 cacheSize = 32*KILO;
     const UINT32 lineSize = 64;
-    const UINT32 associativity = 64;
+    const UINT32 associativity = 8;
     const CACHE_ALLOC::STORE_ALLOCATION allocation = CACHE_ALLOC::STORE_ALLOCATE;
 
     const UINT32 max_sets = cacheSize / (lineSize * associativity);
@@ -62,29 +62,31 @@ LOCALVAR L1::CACHE dl1("D1 Instruction Cache", L1::cacheSize, L1::lineSize, L1::
 
 namespace UL2
 {
-    // 2nd level unified cache: 2 MB, 64 B lines, direct mapped
-    const UINT32 cacheSize = 4*MEGA;
-    const UINT32 lineSize = 128;
-    const UINT32 associativity = 1;
+    // 2nd level unified cache: 256 kB, 64 B lines, 8-way associative
+    const UINT32 cacheSize = 256*KILO;
+    const UINT32 lineSize = 64;
+    const UINT32 associativity = 8;
     const CACHE_ALLOC::STORE_ALLOCATION allocation = CACHE_ALLOC::STORE_ALLOCATE;
 
     const UINT32 max_sets = cacheSize / (lineSize * associativity);
+    const UINT32 max_associativity = associativity;
 
-    typedef CACHE_DIRECT_MAPPED(max_sets, allocation) CACHE;
+    typedef CACHE_ROUND_ROBIN(max_sets, max_associativity, allocation) CACHE;
 }
 LOCALVAR UL2::CACHE ul2("L2 Unified Cache", UL2::cacheSize, UL2::lineSize, UL2::associativity);
 
 namespace UL3
 {
-    // 2nd level unified cache: 2 MB, 64 B lines, direct mapped
-    const UINT32 cacheSize = 32*MEGA;
-    const UINT32 lineSize = 128;
-    const UINT32 associativity = 1;
+    // 2nd level unified cache: 4 MB, 64 B lines, 16-way associative
+    const UINT32 cacheSize = 4*MEGA;
+    const UINT32 lineSize = 64;
+    const UINT32 associativity = 16;
     const CACHE_ALLOC::STORE_ALLOCATION allocation = CACHE_ALLOC::STORE_ALLOCATE;
 
     const UINT32 max_sets = cacheSize / (lineSize * associativity);
+    const UINT32 max_associativity = associativity;
 
-    typedef CACHE_DIRECT_MAPPED(max_sets, allocation) CACHE;
+    typedef CACHE_ROUND_ROBIN(max_sets, max_associativity, allocation) CACHE;
 }
 LOCALVAR UL3::CACHE ul3("L3 Unified Cache", UL3::cacheSize, UL3::lineSize, UL3::associativity);
 

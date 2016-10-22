@@ -4,7 +4,7 @@ import os
 
 project_dir = "/home/gciotto/MO601-117136/project2/src/"
 benchmarks = ["410.bwaves", "429.mcf", "434.zeusmp", "436.cactusADM", "459.GemsFDTD", "400.perlbench", "401.bzip2", "481.wrf", "433.milc", "403.gcc", "toy"]
-suffix = "16_10"
+suffix = "22_10"
 
 results_4KB = '/home/gciotto/MO601-117136/project2/results_4KB.csv'
 results_4MB = '/home/gciotto/MO601-117136/project2/results_4MB.csv'
