@@ -27,15 +27,34 @@ function runPintoolForBenchmark {
 
 			mkdir  ${PROJECT_DIR}/${1}/${pinball_name} &> /dev/null
 
-			${SNIPER_DIR}/run-sniper --pinballs=${INPUT}${pinball_name} -d  ${PROJECT_DIR}/${1}/${pinball_name} -n 2 --roi
+            echo -n "Processing ${pinball_name}... "
+
+			${SNIPER_DIR}/run-sniper --pinballs=${INPUT}${pinball_name} -d  ${PROJECT_DIR}/${1}/${pinball_name} -c gainestown > ${PROJECT_DIR}/${1}/${pinball_name}/sniper_cmd.out
 	
+            echo "Done"
+
 		done
 	done
 
 }
 
-#benchmarks=( 400.perlbench 401.bzip2 403.gcc 429.mcf )
-benchmarks=( 403.gcc )
+if [ "$1" = "int" ]; then
+
+	benchmarks=( 400.perlbench 401.bzip2 403.gcc 429.mcf 445.gobmk 456.hmmer 458.sjeng 462.libquantum 464.h264ref 471.omnetpp 473.astar 483.xalancbmk )
+
+elif [ "$1" = "fp" ]; then
+
+	benchmarks=( 410.bwaves 416.gamess 433.milc 434.zeusmp 436.cactusADM 437.leslie3d 444.namd 447.dealII 450.soplex 453.povray 454.calculix 459.GemsFDTD 465.tonto 470.lbm 481.wrf 482.sphinx3 )
+
+elif [ "$1" = "all" ]; then
+
+	benchmarks=( 400.perlbench 401.bzip2 403.gcc 429.mcf 445.gobmk 456.hmmer 458.sjeng 462.libquantum 464.h264ref 471.omnetpp 473.astar 483.xalancbmk 410.bwaves 416.gamess 433.milc 434.zeusmp 436.cactusADM 437.leslie3d 444.namd 447.dealII 450.soplex 453.povray 454.calculix 459.GemsFDTD 465.tonto 470.lbm 481.wrf 482.sphinx3 )
+
+else
+	
+	benchmarks=( $1 )
+
+fi
 
 # Iterates only directories, which are the benchmarks
 for d in ${benchmarks[@]}; do
