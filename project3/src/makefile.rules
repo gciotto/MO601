@@ -1,0 +1,12 @@
+#PINPLAY_HOME=/home/gciotto/pinplay-drdebug-pldi2016-3.0-pin-3.0-76991-gcc-linux/extras/pinplay
+PINPLAY_HOME=$(PIN_ROOT)/extras/pinplay
+PINPLAY_INCLUDE_HOME=$(PINPLAY_HOME)/include
+PINPLAY_LIB_HOME=$(PINPLAY_HOME)/lib/$(TARGET)
+EXT_LIB_HOME=$(PINPLAY_HOME)/lib-ext/$(TARGET)
+
+$(info $$PINPLAY_HOME is [${PINPLAY_HOME}])
+
+TOOL_CXXFLAGS += -D_FILE_OFFSET_BITS=64 -I$(PIN_ROOT)/source/tools/InstLib -I$(PINPLAY_INCLUDE_HOME) -I$(PIN_ROOT)/source/tools/PinPoints -I${SNIPER_ROOT}/include/
+TOOL_LPATHS += $(PINPLAY_LIB_HOME)/libpinplay.a $(EXT_LIB_HOME)/libbz2.a $(EXT_LIB_HOME)/libzlib.a $(CONTROLLERLIB) 
+
+
