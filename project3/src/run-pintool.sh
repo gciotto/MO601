@@ -6,7 +6,7 @@
 PROJECT_DIR=${PWD}
 PINBALL_DIR=/home/gciotto/INTcpu2006-pinpoints-w100M-d30M-m10
 SNIPER_DIR=/home/gciotto/sniper
-PIN_ROOT=/home/gciotto/pinplay-drdebug-pldi2016-3.0-pin-3.0-76991-gcc-linux
+#PIN_ROOT=/home/gciotto/pinplay-drdebug-pldi2016-3.0-pin-3.0-76991-gcc-linux
 
 echo $PROJECT_DIR
 
@@ -30,10 +30,11 @@ function runPintoolForBenchmark {
 
             		echo -n "Processing ${pinball_name}... "
 
-			CMD="$PIN_ROOT/pin -xyzzy -reserve_memory ${pinball_prefix}.address -t ${PROJECT_DIR}/obj-intel64/${TOOL_NAME}.so -o ${PROJECT_DIR}/${1}/${pinball_name}.log_ref_${SUFFIX} -replay -replay:basename ${pinball_prefix} -- $PIN_ROOT/extras/pinplay/bin/intel64/nullapp"
+			CMD="$PIN_ROOT/pin -xyzzy -reserve_memory ${pinball_prefix}.address -t ${PROJECT_DIR}/obj-ia32/warmup.so  -replay -replay:basename ${pinball_prefix} -- $PIN_ROOT/extras/pinplay/bin/intel64/nullapp"
 
-			${SNIPER_DIR}/run-sniper -- ${CMD}
-	
+			${CMD}
+#			${SNIPER_DIR}/run-sniper --roi -d ${PROJECT_DIR}/${1}/${pinball_name} -c gainestown  -- ${CMD}
+
             		echo "Done"
 
 		done
@@ -67,7 +68,7 @@ elif [ "$1" = "fp1" ]; then
 
 elif [ "$1" = "fp2" ]; then
 
-	benchmarks = ( 450.soplex 453.povray 454.calculix 459.GemsFDTD 465.tonto 470.lbm 481.wrf 482.sphinx3 )
+	benchmarks=( 450.soplex 453.povray 454.calculix 459.GemsFDTD 465.tonto 470.lbm 481.wrf 482.sphinx3 )
 
 else
 	
