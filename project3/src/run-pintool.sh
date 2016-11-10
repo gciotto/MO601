@@ -8,7 +8,7 @@ PINBALL_DIR=/home/gciotto/cpu2006_pinballs
 SNIPER_DIR=/home/gciotto/sniper
 #PIN_ROOT=/home/gciotto/pinplay-drdebug-pldi2016-3.0-pin-3.0-76991-gcc-linux
 
-SUFFIX=1B
+SUFFIX=ideal_gainestown_pinballs_w0_d1B
 
 echo $PROJECT_DIR
 
@@ -18,7 +18,9 @@ function runPintoolForBenchmark {
 
     echo $benchmark
 
-    mkdir ${PROJECT_DIR}/${1}_${SUFFIX} &> /dev/null
+    mkdir ${PROJECT_DIR}/${SUFFIX} &> /dev/null
+
+    mkdir ${PROJECT_DIR}/${SUFFIX}/${1} &> /dev/null
 
 	for INPUT in ${PINBALL_DIR}/*${benchmark}*/ ; do
 
@@ -27,7 +29,7 @@ function runPintoolForBenchmark {
 
 		for pinball in $(find ${INPUT}/pinball_short.pp -type f -name "*.address"); do
       
-            DEST_PATH=${PROJECT_DIR}/${1}_${SUFFIX}/${INPUT##*/}
+            DEST_PATH=${PROJECT_DIR}/${SUFFIX}/${1}/${INPUT##*/}
 
             echo ${DEST_PATH}
 
@@ -48,7 +50,7 @@ function runPintoolForBenchmark {
 #			python ${PROJECT_DIR}/pywrapper.py ${CMD}
 #			${SNIPER_DIR}/run-sniper --roi -d ${PROJECT_DIR}/${1}/${pinball_name} -c gainestown  -- python ${PROJECT_DIR}/pywrapper.py "${CMD}"
 
-			${SNIPER_DIR}/run-sniper  --pinballs=${pinball_prefix} -c gainestown -d ${DEST_PATH} > ${DEST_PATH}/sim.output
+			${SNIPER_DIR}/run-sniper  --pinballs=${pinball_prefix} -c ideal-gainestown -d ${DEST_PATH} > ${DEST_PATH}/sim.output
             cat  ${DEST_PATH}/sim.output
 
 	  		echo "Done"
