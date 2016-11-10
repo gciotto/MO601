@@ -4,40 +4,53 @@
 # Computer Architecture II MO601B
 
 PROJECT_DIR=/home/gciotto/MO601-117136/project3/src
-PINBALL_DIR=/home/gciotto/INTcpu2006-pinpoints-w100M-d30M-m10
+PINBALL_DIR=/home/gciotto/cpu2006_pinballs
 SNIPER_DIR=/home/gciotto/sniper
 #PIN_ROOT=/home/gciotto/pinplay-drdebug-pldi2016-3.0-pin-3.0-76991-gcc-linux
+
+SUFFIX=1B
 
 echo $PROJECT_DIR
 
 function runPintoolForBenchmark {
 		
-	mkdir ${PROJECT_DIR}/${1} &> /dev/null
-
 	benchmark="${1##*.}"
+
+    echo $benchmark
+
+    mkdir ${PROJECT_DIR}/${1}_${SUFFIX} &> /dev/null
 
 	for INPUT in ${PINBALL_DIR}/*${benchmark}*/ ; do
 
+        INPUT=${INPUT::-1}
 		echo ${INPUT}
 
-		for pinball in $(find ${INPUT} -type f -name "*${benchmark}*.address"); do
+		for pinball in $(find ${INPUT}/pinball_short.pp -type f -name "*.address"); do
+      
+            DEST_PATH=${PROJECT_DIR}/${1}_${SUFFIX}/${INPUT##*/}
+
+            echo ${DEST_PATH}
+
+        	mkdir ${DEST_PATH} &> /dev/null
 
 			pinball_prefix=${pinball%.address}
 			pinball_name=$(basename ${pinball_prefix})
 			echo ${pinball_name}
 
-			mkdir  ${PROJECT_DIR}/${1}/${pinball_name} &> /dev/null
+			# mkdir  ${PROJECT_DIR}/${1}_${SUFFIX}/${pinball_name} &> /dev/null
 
-            		echo -n "Processing ${pinball_name}... "
+       		echo -n "Processing ${pinball_name}... "
 
 			CMD="${PIN_ROOT}pin -xyzzy -reserve_memory ${pinball_prefix}.address -t ${PROJECT_DIR}/obj-intel64/warmup.so  -replay -replay:basename ${pinball_prefix} -- $PIN_ROOT/extras/pinplay/bin/intel64/nullapp"
 
-			echo $CMD
+#			echo $CMD
 
 #			python ${PROJECT_DIR}/pywrapper.py ${CMD}
 #			${SNIPER_DIR}/run-sniper --roi -d ${PROJECT_DIR}/${1}/${pinball_name} -c gainestown  -- python ${PROJECT_DIR}/pywrapper.py "${CMD}"
 
-			${SNIPER_DIR}/run-sniper --roi --pinballs=${pinball_prefix} -c gainestown
+			${SNIPER_DIR}/run-sniper  --pinballs=${pinball_prefix} -c gainestown -d ${DEST_PATH} > ${DEST_PATH}/sim.output
+            cat  ${DEST_PATH}/sim.output
+
 	  		echo "Done"
 
 		done
