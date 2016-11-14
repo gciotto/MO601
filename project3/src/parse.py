@@ -2,14 +2,16 @@
 
 import os
 
-project_dir = "/home/gciotto/MO601-117136/project3/src/"
-#benchmarks = ["410.bwaves", "429.mcf", "434.zeusmp", "436.cactusADM", "459.GemsFDTD", "400.perlbench", "401.bzip2", "481.wrf", "433.milc", "403.gcc", "toy"]
-benchmarks = ["400.perlbench"]
-suffix = ""
+_dir = "gainestown_pinball_w0_d1B"
+
+project_dir = "/home/gciotto/MO601-117136/project3/src/" + _dir + "/"
+benchmarks = ["400.perlbench", "401.bzip2", "403.gcc", "429.mcf", "445.gobmk", "456.hmmer", "458.sjeng", "462.libquantum", "464.h264ref", "471.omnetpp", "473.astar", "483.xalancbmk", "410.bwaves", "416.gamess", "433.milc", "434.zeusmp", "436.cactusADM", "437.leslie3d", "444.namd", "447.dealII", "450.soplex", "453.povray", "454.calculix", "459.GemsFDTD", "465.tonto", "470.lbm", "481.wrf", "482.sphinx3"]
+#benchmarks = ["400.perlbench"]
+suffix = "_1B"
 
 sniper_log = "sim.out"
 
-results = '/home/gciotto/MO601-117136/project3/results_gainestown.csv'
+results = '/home/gciotto/MO601-117136/project3/'+ _dir + '.csv'
 
 dict = {}
 
@@ -18,54 +20,50 @@ if __name__ == '__main__' :
     f_results = open(results, 'w')
 
     for benchmark in benchmarks:
-        print project_dir + benchmark
+        #print project_dir + benchmark
 
         if not benchmark in dict:
             dict[benchmark] = {}
 
-        for (dirpath, dirnames, filenames) in os.walk(project_dir + benchmark):
+        print project_dir + benchmark + suffix
+
+        for (dirpath, dirnames, filenames) in os.walk(project_dir + benchmark + suffix):
 
             for dirname in dirnames:
 
-                if suffix in dirname:
-	
-                    print dirname
+                print dirname
+    
+                try:
+                    f = open(project_dir + benchmark + suffix + "/" + dirname + "/" + sniper_log, 'r')
+                except:
+                    print "Erro no benchmark " + dirname
+                    continue
 
-                    b_ratio = dirname.index("_0-") + 3
-                    e_ratio = dirname.index(".0") 
+                for line in f.readlines() :
 
-                    region_ratio = float(dirname [b_ratio : e_ratio]) / 1e5
+                    if not "IPC" in line : continue
 
-                    b_entry = 8
-                    e_ratio = dirname.index("-ref")
+                    line =  line.strip().split('|')
 
-                    key = dirname [b_entry : e_ratio]
-
-                    f = open(project_dir + benchmark + "/" + dirname + "/" + sniper_log,'r')
-
-                    for line in f.readlines() :
-
-                        if not "IPC" in line : continue
-
-                        line =  line.strip().split('|')
-
-                        if not key in dict[benchmark]:
-                            dict[benchmark][key] = {}
-                            dict[benchmark][key]["IPC"] = 0
-                            dict[benchmark][key]["NAME"] = key
+                    if not dirname in dict[benchmark]:
+                        dict[benchmark][dirname] = {}
+                        dict[benchmark][dirname]["IPC"] = 0
+                        dict[benchmark][dirname]["NAME"] = dirname
 
 
-	                    dict[benchmark][key]["IPC"] = dict[benchmark][key]["IPC"] + float(line[1]) * region_ratio
+                    dict[benchmark][dirname]["IPC"] = float(line[1])
 
-                        break
+                    break
 
-                    f.close()
+                f.close()
+
+                f_results.write("%s,%f,\n" % (dict[benchmark][dirname]["NAME"], dict[benchmark][dirname]["IPC"]))
 
                 
-            print benchmark
-            print dict[benchmark]
+        #print benchmark
+        print dict[benchmark]
 	            
-
+        
 		# f_KB.write("%d,%d,%d," % ((im["TotalMisses"] + 3*itlb_4KB["TotalMisses"]), itlb_4KB["TotalMisses"], 3*itlb_4KB["TotalMisses"]))
 		# f_KB.write("%d,%d,%d,\n" % ((dm["TotalMisses"] + 3*dtlb_4KB["TotalMisses"]), dtlb_4KB["TotalMisses"], 3*dtlb_4KB["TotalMisses"]))
 
