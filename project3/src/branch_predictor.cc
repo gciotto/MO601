@@ -6,6 +6,7 @@
 #include "config.hpp"
 #include "stats.h"
 
+
 BranchPredictor::BranchPredictor()
    : m_correct_predictions(0)
    , m_incorrect_predictions(0)
@@ -50,7 +51,7 @@ BranchPredictor* BranchPredictor::create(core_id_t core_id)
       }
       else if (type == "gshare")
       {
-         return new GShareBranchPredictor("branch_predictor", core_id);
+         return new GShareBranchPredictor("branch_predictor", core_id, 8192, 13);
       }
       else
       {
