@@ -24,7 +24,8 @@ GShareBranchPredictor::~GShareBranchPredictor() {
 
 bool GShareBranchPredictor::predict(IntPtr ip, IntPtr target) {
 
-    return true;
+    UInt32 index = (ip ^ g_history) & h_mask;
+    return m_predictors[index].predict();
 }
 
 
