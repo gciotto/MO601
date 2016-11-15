@@ -29,10 +29,10 @@ function runPintoolForBenchmark {
 
 	for INPUT in ${PINBALL_DIR}/*${benchmark}*/ ; do
 
-        INPUT=${INPUT::-1}
-		echo ${INPUT}
+    INPUT=${INPUT::-1}
+	echo ${INPUT}
 
-		for pinball in $(find ${INPUT}/pinball_short.pp/ -type f -name "*.address"); do
+	for pinball in $(find ${INPUT}/pinball_short.pp/ -type f -name "*.address"); do
       
             DEST_PATH_IDEAL=${PROJECT_DIR}/${SUFFIX_IDEAL}/${1}/${INPUT##*/}
             DEST_PATH_NORMAL=${PROJECT_DIR}/${SUFFIX_NORMAL}/${1}/${INPUT##*/}
@@ -41,7 +41,7 @@ function runPintoolForBenchmark {
             echo ${DEST_PATH_NORMAL}
 
             mkdir ${DEST_PATH_IDEAL} &> /dev/null
-        	mkdir ${DEST_PATH_NORMAL} &> /dev/null
+            mkdir ${DEST_PATH_NORMAL} &> /dev/null
 
 			pinball_prefix=${pinball%.address}
 			pinball_name=$(basename ${pinball_prefix})
