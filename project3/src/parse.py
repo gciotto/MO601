@@ -7,7 +7,7 @@ _dir = "gainestown_pinball_w0_d1B"
 project_dir = "/home/gciotto/MO601-117136/project3/src/" + _dir + "/"
 benchmarks = ["400.perlbench", "401.bzip2", "403.gcc", "429.mcf", "445.gobmk", "456.hmmer", "458.sjeng", "462.libquantum", "464.h264ref", "471.omnetpp", "473.astar", "483.xalancbmk", "410.bwaves", "416.gamess", "433.milc", "434.zeusmp", "436.cactusADM", "437.leslie3d", "444.namd", "447.dealII", "450.soplex", "453.povray", "454.calculix", "459.GemsFDTD", "465.tonto", "470.lbm", "481.wrf", "482.sphinx3"]
 #benchmarks = ["400.perlbench"]
-suffix = "_1B"
+suffix = ""
 
 sniper_log = "sim.out"
 
@@ -62,10 +62,6 @@ if __name__ == '__main__' :
                 
         #print benchmark
         print dict[benchmark]
-	            
-        
-		# f_KB.write("%d,%d,%d," % ((im["TotalMisses"] + 3*itlb_4KB["TotalMisses"]), itlb_4KB["TotalMisses"], 3*itlb_4KB["TotalMisses"]))
-		# f_KB.write("%d,%d,%d,\n" % ((dm["TotalMisses"] + 3*dtlb_4KB["TotalMisses"]), dtlb_4KB["TotalMisses"], 3*dtlb_4KB["TotalMisses"]))
 
 		
     f_results.close()
