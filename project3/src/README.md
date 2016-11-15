@@ -31,3 +31,12 @@ O arquivo `run-pintool.sh` aceita alguns parâmetros, sendo eles:
 - `all`: executa todos os *benchmarks*.
 
 Para executar, por exemplo, todos os *benchmarks*, roda-se `./run-pintool.sh all`.
+
+## Obtendo os resultados através do *script* `parse.py`
+
+Os arquivos `csv` podem ser gerados automaticamente através da execução de `python parse.py` Para isso, algumas variáveis devem ser modificadas:
+
+- `_dir`: deve possuir o mesmo que um dos `SUFFIX_*` acima.
+- `project_dir`: diretório onde os resultados do comando `run-pintool.sh` forama gerados.
+- `sniper_log` : nome do arquivo de *log* gerado pelo *sniper*.
+- `results`: caminho completo do arquivo *csv* a ser gerado.
