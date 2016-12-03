@@ -69,23 +69,24 @@ MemoryManager::MemoryManager(Core* core,
 
       m_last_level_cache = (MemComponent::component_t)(Sim()->getCfg()->getInt("perf_model/cache/levels") - 2 + MemComponent::L2_CACHE);
 
+      UInt32 tlb_page_size_bits = Sim()->getCfg()->getInt("perf_model/tlb/page_size_bits");
+
       UInt32 stlb_size = Sim()->getCfg()->getInt("perf_model/stlb/size");
       if (stlb_size)
-         m_stlb = new TLB("stlb", "perf_model/stlb", getCore()->getId(), stlb_size, Sim()->getCfg()->getInt("perf_model/stlb/associativity"), NULL);
+         m_stlb = new TLB("stlb", "perf_model/stlb", getCore()->getId(),  tlb_page_size_bits, stlb_size, Sim()->getCfg()->getInt("perf_model/stlb/associativity"), NULL);
       
       UInt32 itlb_size = Sim()->getCfg()->getInt("perf_model/itlb/size");
-      UInt32 itlb_page_size_bits = Sim()->getCfg()->getInt("perf_model/itlb/page_size_bits");
 
       if (itlb_size)
-         m_itlb = new TLB("itlb", "perf_model/itlb", getCore()->getId(), itlb_page_size_bits, itlb_size, Sim()->getCfg()->getInt("perf_model/itlb/associativity"), m_stlb);
+         m_itlb = new TLB("itlb", "perf_model/itlb", getCore()->getId(), tlb_page_size_bits, itlb_size, Sim()->getCfg()->getInt("perf_model/itlb/associativity"), m_stlb);
 
       UInt32 dtlb_size = Sim()->getCfg()->getInt("perf_model/dtlb/size");
-      UInt32 dtlb_page_size_bits = Sim()->getCfg()->getInt("perf_model/dtlb/page_size_bits");
 
       if (dtlb_size)
-         m_dtlb = new TLB("dtlb", "perf_model/dtlb", getCore()->getId(), dtlb_page_size_bits, dtlb_size, Sim()->getCfg()->getInt("perf_model/dtlb/associativity"), m_stlb);
+         m_dtlb = new TLB("dtlb", "perf_model/dtlb", getCore()->getId(), tlb_page_size_bits, dtlb_size, Sim()->getCfg()->getInt("perf_model/dtlb/associativity"), m_stlb);
       m_tlb_miss_penalty = ComponentLatency(core->getDvfsDomain(), Sim()->getCfg()->getInt("perf_model/tlb/penalty"));
       m_tlb_miss_parallel = Sim()->getCfg()->getBool("perf_model/tlb/penalty_parallel");
+
 
       smt_cores = Sim()->getCfg()->getInt("perf_model/core/logical_cpus");
 
