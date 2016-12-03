@@ -33,7 +33,7 @@ echo $PROJECT_DIR
 
 function runPintoolForBenchmark {
 		
-	benchmark="${1##*.}"
+    benchmark="${1##*.}"
 
     echo $benchmark
 
@@ -45,10 +45,10 @@ function runPintoolForBenchmark {
     mkdir ${PROJECT_DIR}/${SUFFIX_4MB}/${1} &> /dev/null
     mkdir ${PROJECT_DIR}/${SUFFIX_IDEAL}/${1} &> /dev/null
 
-	for INPUT in ${PINBALL_DIR}/*${benchmark}*/ ; do
+    for INPUT in ${PINBALL_DIR}/*${benchmark}*/ ; do
 
     INPUT=${INPUT::-1}
-	echo ${INPUT}
+    echo ${INPUT}
 
     DEST_PATH_4KB=${PROJECT_DIR}/${SUFFIX_4KB}/${1}/${INPUT##*/}
     DEST_PATH_4MB=${PROJECT_DIR}/${SUFFIX_4MB}/${1}/${INPUT##*/}
@@ -61,32 +61,32 @@ function runPintoolForBenchmark {
     mkdir ${DEST_PATH_4MB} &> /dev/null
     mkdir ${DEST_PATH_IDEAL} &> /dev/null
 
-	for pinball in $(find "${INPUT}/${PINBALL_SUBDIR}" -type f -name "*.address"); do
+    for pinball in $(find "${INPUT}/${PINBALL_SUBDIR}" -type f -name "*.address"); do
       
-			pinball_prefix=${pinball%.address}
-			pinball_name=$(basename ${pinball_prefix})
-			echo ${pinball_name}
+		pinball_prefix=${pinball%.address}
+		pinball_name=$(basename ${pinball_prefix})
+		echo ${pinball_name}
 
-            mkdir ${DEST_PATH_4KB}/${pinball_name} &> /dev/null
-            mkdir ${DEST_PATH_4MB}/${pinball_name} &> /dev/null
-            mkdir ${DEST_PATH_IDEAL}/${pinball_name} &> /dev/null
+        mkdir ${DEST_PATH_4KB}/${pinball_name} &> /dev/null
+        mkdir ${DEST_PATH_4MB}/${pinball_name} &> /dev/null
+        mkdir ${DEST_PATH_IDEAL}/${pinball_name} &> /dev/null
 
-           	echo "Processing ${pinball_name} 4KB... "
-			${SNIPER_DIR}/run-sniper  --pinballs=${pinball_prefix} -c ${SNIPER_CFG}_4KB ${SNIPER_FLAGS} -d ${DEST_PATH_4KB}/${pinball_name} > ${DEST_PATH_4KB}/${pinball_name}/sim.output
-            cat  ${DEST_PATH_4KB}/${pinball_name}/sim.output
+       	echo "Processing ${pinball_name} 4KB... "
+        ${SNIPER_DIR}/run-sniper  --pinballs=${pinball_prefix} -c ${SNIPER_CFG}_4KB ${SNIPER_FLAGS} -d ${DEST_PATH_4KB}/${pinball_name} > ${DEST_PATH_4KB}/${pinball_name}/sim.output
+        cat  ${DEST_PATH_4KB}/${pinball_name}/sim.output
 
-      		echo "Processing ${pinball_name} 4MB... "
-			${SNIPER_DIR}/run-sniper  --pinballs=${pinball_prefix} -c ${SNIPER_CFG}_4MB ${SNIPER_FLAGS} -d ${DEST_PATH_4MB}/${pinball_name} > ${DEST_PATH_4MB}/${pinball_name}/sim.output
-            cat  ${DEST_PATH_4MB}/${pinball_name}/sim.output
+        echo "Processing ${pinball_name} 4MB... "
+        ${SNIPER_DIR}/run-sniper  --pinballs=${pinball_prefix} -c ${SNIPER_CFG}_4MB ${SNIPER_FLAGS} -d ${DEST_PATH_4MB}/${pinball_name} > ${DEST_PATH_4MB}/${pinball_name}/sim.output
+        cat  ${DEST_PATH_4MB}/${pinball_name}/sim.output
 
-      		echo "Processing ${pinball_name} IDEAL... "
-			${SNIPER_DIR}/run-sniper  --pinballs=${pinball_prefix} -c ideal-${SNIPER_CFG} ${SNIPER_FLAGS} -d ${DEST_PATH_IDEAL}/${pinball_name} > ${DEST_PATH_IDEAL}/${pinball_name}/sim.output
-            cat  ${DEST_PATH_IDEAL}/${pinball_name}/sim.output
+        echo "Processing ${pinball_name} IDEAL... "
+        ${SNIPER_DIR}/run-sniper  --pinballs=${pinball_prefix} -c ideal-${SNIPER_CFG} ${SNIPER_FLAGS} -d ${DEST_PATH_IDEAL}/${pinball_name} > ${DEST_PATH_IDEAL}/${pinball_name}/sim.output
+        cat  ${DEST_PATH_IDEAL}/${pinball_name}/sim.output
 
-	  		echo "Done"
+        echo "Done"
 
-		done
-	done
+        done
+    done
 
 }
 
