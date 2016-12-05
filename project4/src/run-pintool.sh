@@ -11,14 +11,14 @@ PINBALLS=w100M_d30M
 SNIPER_DIR=/home/gciotto/sniper
 SNIPER_CFG=article
 
-SUFFIX_GENERAL=30_11
+SUFFIX_GENERAL=03_12
 SUFFIX_4KB=4KB_article_pinballs_${PINBALLS}_${SUFFIX_GENERAL}
 SUFFIX_4MB=4MB_article_pinballs_${PINBALLS}_${SUFFIX_GENERAL}
 SUFFIX_IDEAL=ideal_article_pinballs_${PINBALLS}_${SUFFIX_GENERAL}
 
 if [ "${PINBALLS}" == "w100M_d30M" ] ; then
   
-    PINBALL_DIR=/home/gciotto/INTcpu2006-pinpoints-w100M-d30M-m10 # 100M warmup, 30M detailed mode pinballs 
+    PINBALL_DIR=/home/gciotto/cpu2006-pinpoints-w100M-d30M-m10 # 100M warmup, 30M detailed mode pinballs 
     SNIPER_FLAGS="--roi-script -s roi-icount:0:100000000:30000000"
     PINBALL_SUBDIR=""
 
@@ -79,9 +79,9 @@ function runPintoolForBenchmark {
         ${SNIPER_DIR}/run-sniper  --pinballs=${pinball_prefix} -c ${SNIPER_CFG}_4MB ${SNIPER_FLAGS} -d ${DEST_PATH_4MB}/${pinball_name} > ${DEST_PATH_4MB}/${pinball_name}/sim.output
         cat  ${DEST_PATH_4MB}/${pinball_name}/sim.output
 
-        echo "Processing ${pinball_name} IDEAL... "
-        ${SNIPER_DIR}/run-sniper  --pinballs=${pinball_prefix} -c ideal-${SNIPER_CFG} ${SNIPER_FLAGS} -d ${DEST_PATH_IDEAL}/${pinball_name} > ${DEST_PATH_IDEAL}/${pinball_name}/sim.output
-        cat  ${DEST_PATH_IDEAL}/${pinball_name}/sim.output
+#        echo "Processing ${pinball_name} IDEAL... "
+#        ${SNIPER_DIR}/run-sniper  --pinballs=${pinball_prefix} -c ideal-${SNIPER_CFG} ${SNIPER_FLAGS} -d ${DEST_PATH_IDEAL}/${pinball_name} > ${DEST_PATH_IDEAL}/${pinball_name}/sim.output
+#        cat  ${DEST_PATH_IDEAL}/${pinball_name}/sim.output
 
         echo "Done"
 
